@@ -50,6 +50,25 @@ class SkillContractTests(unittest.TestCase):
         self.assertIn("python3 -m unittest discover -s tests -v", readme)
         self.assertFalse(re.search(r"(?i)(api[_ -]?key|token)\s*[:=]\s*[^<{\[]", readme))
 
+class ReadmeContractTests(unittest.TestCase):
+    def setUp(self) -> None:
+        self.readme = (ROOT / "README.md").read_text()
+
+    def test_readme_version_matches_skill_frontmatter(self) -> None:
+        frontmatter = SKILL.split("---\n", 2)[1]
+        version = re.search(r"(?m)^  version: (\d+\.\d+\.\d+)$", frontmatter)
+        self.assertIsNotNone(version, "SKILL.md must declare metadata.version")
+        self.assertIn(f"(currently {version.group(1)})", self.readme)
+
+    def test_readme_has_no_design_basis_section(self) -> None:
+        self.assertNotRegex(self.readme, r"(?im)^#+ .*design basis")
+
+    def test_readme_relative_links_resolve(self) -> None:
+        for target in re.findall(r"\[[^\]]+\]\(([^)]+)\)", self.readme):
+            if target.startswith(("http://", "https://", "#", "mailto:")):
+                continue
+            self.assertTrue((ROOT / target).exists(), target)
+
 
 if __name__ == "__main__":
     unittest.main()
