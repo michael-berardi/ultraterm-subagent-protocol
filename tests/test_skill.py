@@ -138,5 +138,14 @@ class ReadmeContractTests(unittest.TestCase):
             self.assertTrue((ROOT / target).exists(), target)
 
 
+    def test_children_always_skip_project_wide_validation(self) -> None:
+        # The primary validates once after integration, so the skip rule has
+        # no concurrency condition in the skill or its runtime mapping.
+        omp = (ROOT / "references" / "omp.md").read_text()
+        self.assertNotIn("while siblings run", SKILL)
+        self.assertIn("skip project-wide builds, linters, and test suites; the primary validates once", SKILL)
+        self.assertIn("Every child skips formatters, linters, builds, and project-wide tests", omp)
+
+
 if __name__ == "__main__":
     unittest.main()
