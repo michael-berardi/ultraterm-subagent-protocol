@@ -19,7 +19,7 @@ Before acting on a nontrivial task:
 2. Draw the dependency boundary: which leaves are independent now, which require earlier output, and which touch shared mutable state.
 3. Decide whether delegation improves **time to a correct result**. Do simple, sequential, tightly coupled, or judgment-heavy work directly.
 4. Pick the most specific available agent and the cheapest model tier that can finish the leaf reliably.
-5. Dispatch independent leaves together in one batch, up to the concurrency ceiling. Do not serialize work that can safely run concurrently.
+5. Dispatch independent leaves together in one batch, up to the concurrency ceiling.
 
 Do not delegate top-level decomposition. The primary has the user context; a blank agent does not. Delegate a competing local design only when tradeoffs genuinely benefit from another view.
 
