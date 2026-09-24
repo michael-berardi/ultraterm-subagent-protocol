@@ -53,7 +53,7 @@ Then follow the routing pass in `SKILL.md`. A dispatch batch that conforms to th
 Goal: ship the billing retry fix behind the existing flag.
 Constraints: no schema changes; no new dependencies; each leaf may
   edit only its Target file, must not broaden scope or spawn subagents,
-  and skips project-wide builds and suites while siblings run.
+  and skips project-wide builds and suites.
 Contract: billing/retry.ts exports RetryPolicy
   { maxAttempts: number; baseDelayMs: number; jitter: boolean };
   Leaf A implements it, Leaf B consumes exactly that shape.
