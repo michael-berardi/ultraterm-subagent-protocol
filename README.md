@@ -94,7 +94,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md). Keep changes vendor-neutral, compact, an
 
 ## Versioning and releases
 
-The canonical version is `metadata.version` in [`SKILL.md`](SKILL.md) (currently 1.0.0), following semantic versioning: breaking contract changes bump the major version, new protocol sections the minor version, and wording fixes the patch version. Releases are commits on `main`; behavioral changes ship with their README and test updates in the same commit.
+The canonical version is `metadata.version` in [`SKILL.md`](SKILL.md) (currently 1.0.1), following semantic versioning: breaking contract changes bump the major version, new protocol sections the minor version, and wording fixes the patch version. Releases are commits on `main`; behavioral changes ship with their README and test updates in the same commit.
 
 ## License
 
