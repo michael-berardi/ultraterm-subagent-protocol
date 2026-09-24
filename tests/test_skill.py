@@ -16,6 +16,30 @@ class SkillContractTests(unittest.TestCase):
         self.assertRegex(frontmatter, r"(?m)^description: .+subagents")
         self.assertIn("acronym: USAP", frontmatter)
 
+    def test_frontmatter_meets_agent_skill_loader_limits(self) -> None:
+        # Common agent-skill loaders: name is 1-64 chars of lowercase
+        # letters, digits and single hyphens, matching the install
+        # directory; description is 1-1024 chars, says when to use the
+        # skill, and has no angle brackets; only known top-level keys.
+        frontmatter = SKILL.split("---\n", 2)[1]
+        keys = re.findall(r"(?m)^([A-Za-z_-]+):", frontmatter)
+        self.assertLessEqual(
+            set(keys),
+            {"name", "description", "license", "compatibility", "metadata", "allowed-tools"},
+        )
+        name = re.search(r"(?m)^name: (.+)$", frontmatter).group(1)
+        self.assertRegex(name, r"^[a-z0-9]+(-[a-z0-9]+)*$")
+        self.assertLessEqual(len(name), 64)
+        description = re.search(r"(?m)^description: (.+)$", frontmatter).group(1)
+        self.assertLessEqual(len(description), 1024)
+        self.assertTrue(description.startswith("Use "), "description must say when to use it")
+        self.assertNotRegex(description, r"[<>]")
+        readme = (ROOT / "README.md").read_text()
+        installs = re.findall(r"skills/([\w.-]+)", readme)
+        self.assertTrue(installs)
+        for directory in installs:
+            self.assertEqual(directory, name)
+
     def test_core_protocol_covers_efficiency_invariants(self) -> None:
         for phrase in (
             "time to a correct result",
