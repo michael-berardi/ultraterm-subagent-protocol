@@ -64,6 +64,11 @@ class CrossFileConsistencyTests(unittest.TestCase):
             self.assertNotRegex(text, r"(?i)every independent leaf in one", name)
             self.assertIn("concurrency ceiling", text, name)
 
+    def test_runtime_mapping_keeps_single_writer_rule(self) -> None:
+        self.assertIn("One writer owns each file", SKILL)
+        self.assertIn("One writer owns each file", OMP)
+        self.assertNotRegex(OMP, r"(?i)siblings editing shared files")
+
 
 class ReadmeContractTests(unittest.TestCase):
     def setUp(self) -> None:

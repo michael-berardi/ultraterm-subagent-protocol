@@ -20,7 +20,7 @@ Never pass routine work to a quality specialist merely because capacity exists. 
 - Use `hub send` for a concrete interface or ownership conflict, not status polling.
 - Let results auto-deliver while the primary reads, integrates, or prepares verification.
 - If blocked with no local work, use one bounded wait rather than repeated short polls.
-- Siblings editing shared files must coordinate before writing; prefer one integration owner.
+- One writer owns each file; a sibling that needs a change in another's file sends it to that owner.
 - Parent verification covers the integrated result. Every child skips formatters, linters, builds, and project-wide tests unless its isolated acceptance contract explicitly requires a focused check.
 
 ## Suggested OMP batch contract
