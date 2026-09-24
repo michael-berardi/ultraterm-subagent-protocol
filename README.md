@@ -74,7 +74,7 @@ USAP is a skill contract, not a service. The repository contains:
 
 - [`SKILL.md`](SKILL.md) — the protocol: routing pass, adaptive concurrency tiers, capability routing table, dispatch contract, coordination rules, integration gate, and efficiency scorecard.
 - [`references/omp.md`](references/omp.md) — an optional mapping of the protocol onto OMP's `task` and `hub` tools.
-- [`tests/test_skill.py`](tests/test_skill.py) — deterministic checks of the public contract: portable frontmatter, core invariants, context-efficiency and disclosure limits, required files, and README freshness.
+- [`tests/test_skill.py`](tests/test_skill.py) — deterministic checks of the public contract: portable frontmatter, core invariants, context-efficiency and disclosure limits, required files, cross-file rule consistency, and README freshness.
 
 Because the skill is text, behavior is exactly what the files say. There are no hidden defaults, install scripts, or telemetry.
 
