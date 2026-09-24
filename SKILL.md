@@ -73,7 +73,7 @@ Also state:
 - whether the agent may edit;
 - exclusive file or subsystem ownership;
 - that it must not broaden scope or spawn its own subagents unless explicitly authorized;
-- that it must skip project-wide builds, linters, and test suites while siblings run;
+- that it must skip project-wide builds, linters, and test suites; the primary validates once after integration;
 - the concise return contract: evidence, changed paths, risks, and focused checks.
 
 Pass large context through files or artifacts. Do not paste session history. Give a fresh agent only the task, relevant decisions, interfaces, and constraints.
