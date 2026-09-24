@@ -51,20 +51,22 @@ Then follow the routing pass in `SKILL.md`. A dispatch batch that conforms to th
 
 ```text
 Goal: ship the billing retry fix behind the existing flag.
-Constraints: no schema changes; no new dependencies; children skip
-  project-wide builds and suites while siblings run.
-Contract: Leaf A defines RetryPolicy in billing/retry.ts;
-  Leaf B consumes that interface in billing/worker.ts.
+Constraints: no schema changes; no new dependencies; each leaf may
+  edit only its Target file, must not broaden scope or spawn subagents,
+  and skips project-wide builds and suites while siblings run.
+Contract: billing/retry.ts exports RetryPolicy
+  { maxAttempts: number; baseDelayMs: number; jitter: boolean };
+  Leaf A implements it, Leaf B consumes exactly that shape.
 
-Leaf A — Target: billing/retry.ts only. Change: add RetryPolicy with
-  backoff and jitter fields. Acceptance: interface compiles; report
-  changed path and the exported symbol names.
+Leaf A — Target: billing/retry.ts only. Change: add RetryPolicy and a
+  backoff helper. Acceptance: file compiles; report changed path and
+  exported symbol names.
 Leaf B — Target: billing/worker.ts only. Change: replace inline retry
-  loop with RetryPolicy. Acceptance: focused retry test passes; report
-  behavior deltas.
+  loop with RetryPolicy. Acceptance: compiles against the Contract
+  shape; report behavior deltas.
 ```
 
-The primary integrates both leaves, verifies the interface actually matches, and runs the project suite once at the end.
+Leaf B runs alongside Leaf A because the Contract pins the interface it consumes. The primary integrates both leaves, verifies the interface actually matches, runs the focused retry test, and runs the project suite once at the end.
 
 ## Architecture and behavior
 
