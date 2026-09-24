@@ -82,7 +82,7 @@ Pass large context through files or artifacts. Do not paste session history. Giv
 
 - One writer owns each file or irreducible shared boundary.
 - Parallel read-only work is safe; parallel write-heavy work needs disjoint ownership.
-- A dependent leaf waits for its prerequisite. Parallelize DAG siblings, not the dependency chain.
+- A leaf that needs another leaf's output waits for it; one that needs only an interface pinned in the batch Contract is independent. Parallelize DAG siblings, not the dependency chain.
 - Use peer messaging only for a real interface conflict; the primary resolves cross-agent decisions.
 - Do useful integration work while agents run. Do not poll repeatedly or dispatch padding work.
 - Resume the same agent for a small correction. Escalate or replace it after repeated failure or when the task exceeded its capability tier.
