@@ -4,7 +4,7 @@ description: Use at the start of every nontrivial task and whenever deciding whe
 license: MIT
 metadata:
   acronym: USAP
-  version: 1.0.0
+  version: 1.0.1
 ---
 
 # UltraTerm Subagent Protocol (USAP)
@@ -19,7 +19,7 @@ Before acting on a nontrivial task:
 2. Draw the dependency boundary: which leaves are independent now, which require earlier output, and which touch shared mutable state.
 3. Decide whether delegation improves **time to a correct result**. Do simple, sequential, tightly coupled, or judgment-heavy work directly.
 4. Pick the most specific available agent and the cheapest model tier that can finish the leaf reliably.
-5. Dispatch every independent leaf in one batch. Do not serialize work that can safely run concurrently.
+5. Dispatch independent leaves together in one batch, up to the concurrency ceiling. Do not serialize work that can safely run concurrently.
 
 Do not delegate top-level decomposition. The primary has the user context; a blank agent does not. Delegate a competing local design only when tradeoffs genuinely benefit from another view.
 
@@ -29,6 +29,8 @@ Do not delegate top-level decomposition. The primary has the user context; a bla
 - **1–2 agents:** bounded research, one implementation leaf, or one independent review.
 - **3–4 agents:** several disjoint files, subsystems, audits, or evidence sources.
 - **5–8 agents:** only many genuinely independent leaves with clear ownership and enough host capacity.
+
+Never run more than 8 agents or exceed host capacity; this is the concurrency ceiling. Queue further independent leaves for the next batch.
 
 More agents increase token use and coordination cost. Parallelism is useful only when leaves can proceed without waiting, editing the same files, or contending for the same scarce resource.
 

@@ -5,6 +5,7 @@ import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
 SKILL = (ROOT / "SKILL.md").read_text()
+OMP = (ROOT / "references" / "omp.md").read_text()
 
 
 class SkillContractTests(unittest.TestCase):
@@ -49,6 +50,20 @@ class SkillContractTests(unittest.TestCase):
         readme = (ROOT / "README.md").read_text()
         self.assertIn("python3 -m unittest discover -s tests -v", readme)
         self.assertFalse(re.search(r"(?i)(api[_ -]?key|token)\s*[:=]\s*[^<{\[]", readme))
+
+class CrossFileConsistencyTests(unittest.TestCase):
+    def test_concurrency_ceiling_is_stated_and_bounds_batch_dispatch(self) -> None:
+        # The top tier's upper bound is the ceiling; it must be stated as a
+        # hard limit, and "dispatch every leaf in one batch" rules must defer
+        # to it, or both rules fire with different outcomes past the ceiling.
+        tiers = [int(n) for n in re.findall(r"\*\*(?:\d+–)?(\d+) agents?:\*\*", SKILL)]
+        self.assertTrue(tiers, "SKILL.md must list concurrency tiers")
+        ceiling = max(tiers)
+        self.assertRegex(SKILL, rf"Never run more than {ceiling} agents")
+        for name, text in (("SKILL.md", SKILL), ("references/omp.md", OMP)):
+            self.assertNotRegex(text, r"(?i)every independent leaf in one", name)
+            self.assertIn("concurrency ceiling", text, name)
+
 
 class ReadmeContractTests(unittest.TestCase):
     def setUp(self) -> None:
