@@ -1,5 +1,7 @@
 # UltraTerm Subagent Protocol (USAP)
 
+[![Latest release](https://img.shields.io/github/v/release/michael-berardi/ultraterm-subagent-protocol?label=release)](https://github.com/michael-berardi/ultraterm-subagent-protocol/releases/latest) [![MIT License](https://img.shields.io/github/license/michael-berardi/ultraterm-subagent-protocol)](LICENSE) ![Agent skill](https://img.shields.io/badge/agent-skill-blue) ![Vendor neutral](https://img.shields.io/badge/vendor-neutral-lightgrey)
+
 A compact, vendor-neutral skill that tells a primary agent when and how to delegate work to subagents — so parallelism helps instead of inflating cost, context, and rework.
 
 ## The problem
