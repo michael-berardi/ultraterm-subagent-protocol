@@ -4,7 +4,7 @@ description: Use at the start of every nontrivial task and whenever deciding whe
 license: MIT
 metadata:
   acronym: USAP
-  version: 1.0.0
+  version: 1.2.0
 ---
 
 # UltraTerm Subagent Protocol (USAP)
@@ -84,6 +84,16 @@ Pass large context through files or artifacts. Do not paste session history. Giv
 - Use peer messaging only for a real interface conflict; the primary resolves cross-agent decisions.
 - Do useful integration work while agents run. Do not poll repeatedly or dispatch padding work.
 - Resume the same agent for a small correction. Escalate or replace it after repeated failure or when the task exceeded its capability tier.
+
+## Bounded execution and recovery
+
+Declare finite time and turn budgets; raise them explicitly for long-horizon work, not implicitly after failure. Native compaction and retry must remain bounded by host policy and the dispatch deadline. A wait timeout ends observation, not execution.
+
+Where disk checkpoints are supported, inspect diagnostics and partial on-disk work before explicit resume of unfinished tasks only. Never automatically replay work or assume workers survive host exit. Completed tasks are not resumed; persisted history is evidence, not proof that an attempted side effect finished.
+
+Deliver completion notices at the parent idle boundary, not as a dump behind the next user message. Notices do not replace the integration gate.
+
+This is proposed USAP 1.2.0 (Unreleased), not release verification. Preserve protocol major-version compatibility; runtime telemetry version 1 stays compatible through additive fields. No dependencies or provider routing changes are required. See [UltraTerm mapping](references/ultraterm.md) for optional host-specific budgets and controls.
 
 ## Integration gate
 
