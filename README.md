@@ -2,6 +2,8 @@
 
 A compact, vendor-neutral skill that tells a primary agent when and how to delegate work to subagents — so parallelism helps instead of inflating cost, context, and rework.
 
+> Proposed USAP 1.2.0 — Unreleased. Documentation and contract checks are not runtime verification or a release announcement.
+
 ## The problem
 
 Ad-hoc delegation fails in predictable ways: every task gets fanned out regardless of coupling, each subagent gets the strongest model regardless of difficulty, workers receive pasted session history instead of a contract, and the primary agent accepts "done" reports without verification. The result is more tokens, more coordination, and slower delivery of a correct result.
@@ -71,10 +73,12 @@ The primary integrates both leaves, verifies the interface actually matches, and
 USAP is a skill contract, not a service. The repository contains:
 
 - [`SKILL.md`](SKILL.md) — the protocol: routing pass, adaptive concurrency tiers, capability routing table, dispatch contract, coordination rules, integration gate, and efficiency scorecard.
+- [`references/ultraterm.md`](references/ultraterm.md) — proposed UltraTerm 1.2 behavior: bounded execution, checkpoints, explicit resume, diagnostics, and idle-boundary completion.
+- [`CHANGELOG.md`](CHANGELOG.md) — unreleased protocol changes.
 - [`references/omp.md`](references/omp.md) — an optional mapping of the protocol onto OMP's `task` and `hub` tools.
 - [`tests/test_skill.py`](tests/test_skill.py) — deterministic checks of the public contract: portable frontmatter, core invariants, context-efficiency and disclosure limits, required files, and README freshness.
 
-Because the skill is text, behavior is exactly what the files say. There are no hidden defaults, install scripts, or telemetry.
+The skill is text: it defines a process, not executable enforcement. This repository has no install scripts or telemetry; optional host mappings describe runtime behavior that must be checked separately.
 
 ## Security and safety
 
@@ -94,7 +98,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md). Keep changes vendor-neutral, compact, an
 
 ## Versioning and releases
 
-The canonical version is `metadata.version` in [`SKILL.md`](SKILL.md) (currently 1.0.0), following semantic versioning: breaking contract changes bump the major version, new protocol sections the minor version, and wording fixes the patch version. Releases are commits on `main`; behavioral changes ship with their README and test updates in the same commit.
+The canonical version is `metadata.version` in [`SKILL.md`](SKILL.md) (currently 1.2.0), following semantic versioning: breaking contract changes bump the major version, new protocol sections the minor version, and wording fixes the patch version. The 1.2.0 entry is Unreleased; no release or runtime verification is claimed here. Protocol major version 1 remains compatible; host telemetry version 1 retains additive fields rather than a schema-version bump. This proposal changes neither dependencies nor provider routing. See [CHANGELOG.md](CHANGELOG.md).
 
 ## License
 
