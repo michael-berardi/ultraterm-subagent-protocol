@@ -33,13 +33,13 @@ USAP does **not** guarantee outcome metrics. Wall-clock time, token cost, and fi
 Copy this repository into a skill directory recognized by your agent runtime:
 
 ```sh
-git clone --branch v1.0.1 https://github.com/michael-berardi/ultraterm-subagent-protocol.git \
+git clone --branch v1.3.0 https://github.com/michael-berardi/ultraterm-subagent-protocol.git \
   ~/.config/agents/skills/ultraterm-subagent-protocol
 ```
 
 The installed path must contain `SKILL.md`. For project-local installation, copy the repository to your runtime's project skill directory, commonly `.agents/skills/ultraterm-subagent-protocol` or `.claude/skills/ultraterm-subagent-protocol`.
 
-UltraTerm installs and maintains this skill automatically as a managed resource.
+UltraTerm maintains its bundled, host-specific variant as a managed resource. Its version and routing policies are independent of this portable release; do not overwrite managed helpers or assume identical capabilities.
 
 ## Quick start
 
@@ -55,7 +55,9 @@ Then follow the routing pass in `SKILL.md`. A dispatch batch that conforms to th
 Goal: ship the billing retry fix behind the existing flag.
 Constraints: no schema changes; no new dependencies; each leaf may
   edit only its Target file, must not broaden scope or spawn subagents,
-  and skips project-wide builds and suites.
+  has no shell permission, and skips project-wide builds and suites.
+  Budget: 10 minutes per batch, 64 turns per leaf, including retries.
+  Parent owns integrated validation; leaves report evidence and risks.
 Contract: billing/retry.ts exports RetryPolicy
   { maxAttempts: number; baseDelayMs: number; jitter: boolean };
   Leaf A implements it, Leaf B consumes exactly that shape.
@@ -76,9 +78,10 @@ USAP is a skill contract, not a service. The repository contains:
 
 - [`SKILL.md`](SKILL.md) — the protocol: routing pass, adaptive concurrency tiers, capability routing table, dispatch contract, coordination rules, integration gate, and efficiency scorecard.
 - [`references/omp.md`](references/omp.md) — an optional mapping of the protocol onto OMP's `task` and `hub` tools.
+- [`references/ultraterm.md`](references/ultraterm.md) — optional host-specific budgets, permissions, checkpoints, explicit resume, diagnostics, and completion delivery.
 - [`tests/test_skill.py`](tests/test_skill.py) — deterministic checks of the public contract: portable frontmatter, core invariants, context-efficiency and disclosure limits, required files, cross-file rule consistency, and README freshness.
 
-Because the skill is text, behavior is exactly what the files say. There are no hidden defaults, install scripts, or telemetry.
+The skill is text, not executable enforcement. There are no install scripts or telemetry in this repository. Optional mappings describe host behavior, not capabilities supplied by installing the skill. Check the running host's schema and diagnostics before using them; source inspection is not end-to-end recovery proof.
 
 ## Security and safety
 
@@ -98,7 +101,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md). Keep changes vendor-neutral, compact, an
 
 ## Versioning and releases
 
-The canonical version is `metadata.version` in [`SKILL.md`](SKILL.md) (currently 1.0.1), following semantic versioning: breaking contract changes bump the major version, new protocol sections the minor version, and wording fixes the patch version. Each release is tagged `vX.Y.Z` with notes on the [releases page](https://github.com/michael-berardi/ultraterm-subagent-protocol/releases) and in [CHANGELOG.md](CHANGELOG.md); behavioral changes ship with their README and test updates in the same commit.
+The canonical version is `metadata.version` in [`SKILL.md`](SKILL.md) (currently 1.3.0), following semantic versioning: breaking contract changes bump the major version, new protocol sections the minor version, and wording fixes the patch version. Each release is tagged `vX.Y.Z` with notes on the [releases page](https://github.com/michael-berardi/ultraterm-subagent-protocol/releases) and in [CHANGELOG.md](CHANGELOG.md); behavioral changes ship with their README and test updates in the same commit.
 
 ## License
 

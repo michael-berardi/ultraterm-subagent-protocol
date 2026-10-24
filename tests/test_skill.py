@@ -69,6 +69,8 @@ class SkillContractTests(unittest.TestCase):
             "CONTRIBUTING.md",
             "SECURITY.md",
             "references/omp.md",
+            "references/ultraterm.md",
+            "CHANGELOG.md",
         ):
             self.assertTrue((ROOT / path).is_file(), path)
         readme = (ROOT / "README.md").read_text()
@@ -121,7 +123,7 @@ class ReadmeContractTests(unittest.TestCase):
         for field in ("Goal:", "Constraints:", "Contract:", "Target:", "Change:", "Acceptance:"):
             self.assertIn(field, example)
         # "Also state" items from SKILL.md's dispatch contract.
-        for term in ("broaden scope", "spawn", "skip", "report"):
+        for term in ("broaden scope", "spawn", "skip", "report", "no shell permission", "Budget:", "minutes", "turns"):
             self.assertIn(term, example)
         # A consumer leaf dispatched with its producer must get a pinned interface.
         self.assertIn("pinned in the batch Contract is independent", SKILL)
@@ -145,6 +147,84 @@ class ReadmeContractTests(unittest.TestCase):
         self.assertNotIn("while siblings run", SKILL)
         self.assertIn("skip project-wide builds, linters, and test suites; the primary validates once", SKILL)
         self.assertIn("Every child skips formatters, linters, builds, and project-wide tests", omp)
+
+
+class RecoveryContractTests(unittest.TestCase):
+    """Synthetic text-contract checks; not host-runtime verification."""
+
+    def setUp(self) -> None:
+        self.mapping = (ROOT / "references/ultraterm.md").read_text()
+        self.readme = (ROOT / "README.md").read_text()
+        self.changelog = (ROOT / "CHANGELOG.md").read_text()
+
+    def test_release_version_and_pinned_install_agree(self) -> None:
+        version = re.search(r"(?m)^  version: (\d+\.\d+\.\d+)$", SKILL).group(1)
+        self.assertEqual(version, "1.3.0")
+        self.assertIn(f"--branch v{version}", self.readme)
+        self.assertRegex(self.changelog, rf"(?m)^## \[{re.escape(version)}\] - \d{{4}}-\d{{2}}-\d{{2}}$")
+        self.assertIn(f"USAP {version}", self.mapping)
+        self.assertNotIn("Unreleased", self.readme + SKILL + self.mapping)
+        for previous in ("[1.0.1]", "[1.0.0]"):
+            self.assertIn(previous, self.changelog)
+
+    def test_core_budget_and_recovery_rules(self) -> None:
+        for phrase in (
+            "finite time and turn budgets", "peer requests must stay bounded",
+            "wait timeout ends observation, not execution", "Prefer foreground",
+            "disk checkpoints", "partial side effects", "explicit resume",
+            "unfinished tasks only", "Never automatically replay",
+            "idle boundary", "next user message", "not exactly-once",
+        ):
+            self.assertIn(phrase, SKILL)
+
+    def test_permissions_and_partial_evidence_are_explicit(self) -> None:
+        for phrase in (
+            "explicit edit and shell permissions", "omit writable paths for read-only",
+            "must not broaden scope or spawn children", "not a sandbox",
+            "Shell access may bypass", "Keep secrets out", "never grant permissions",
+            "failures, cancellation, timeout, budget exhaustion, and truncated evidence",
+        ):
+            self.assertIn(phrase, SKILL)
+        for phrase in ("ownedPaths", "mayEdit", "allowBash", "no Bash", "requireImages"):
+            self.assertIn(phrase, self.mapping)
+
+    def test_mapping_budgets_and_continuation_guards(self) -> None:
+        for phrase in (
+            "600,000 ms (10 minutes)", "1,000 ms", "28,800,000 ms (8 hours)",
+            "including queue time", "default 64", "maximum 2048", "0–30,000 ms",
+            "timeout ends observation only", "Memory-only", "do not provide daemon survival",
+            "unfinished tasks only", "completed tasks never repeat", "one bounded continuation",
+            "does not trigger a model turn", "checkpoint errors", "not rollback",
+        ):
+            self.assertIn(phrase, self.mapping)
+
+    def test_host_mapping_does_not_overclaim_verification(self) -> None:
+        for phrase in (
+            "not host runtime tests", "do not prove crash/restart recovery",
+            "idle-delivery timing end to end", "independent release histories",
+            "does not bump a host checkpoint or telemetry schema",
+        ):
+            self.assertIn(phrase, self.mapping)
+        self.assertNotIn("telemetry remains numeric version 1", self.mapping)
+
+    def test_new_core_rules_are_vendor_neutral(self) -> None:
+        for forbidden in (
+            "claudeAccount", "openai-codex/", "steak-pi/", "Sonnet", "Opus",
+            "USAP_CLAUDE_API_CONFIG", "maxTurns", "timeoutMs", "per-session Codex",
+        ):
+            self.assertNotIn(forbidden, SKILL)
+
+    def test_all_public_docs_have_resolving_links_and_no_private_paths(self) -> None:
+        for path in ROOT.rglob("*.md"):
+            if ".git" in path.parts:
+                continue
+            text = path.read_text()
+            for forbidden in ("/Users/", "Liberty Design", "STRIPE_API_KEY", "OPENROUTER_API_KEY"):
+                self.assertNotIn(forbidden, text, str(path))
+            for target in re.findall(r"\[[^\]]+\]\(([^)]+)\)", text):
+                if target.startswith(("https://", "http://", "#", "mailto:")):
+                    continue
+                self.assertTrue((path.parent / target.split("#", 1)[0]).exists(), target)
 
 
 if __name__ == "__main__":

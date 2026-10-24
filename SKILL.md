@@ -4,7 +4,7 @@ description: Use at the start of every nontrivial task and whenever deciding whe
 license: MIT
 metadata:
   acronym: USAP
-  version: 1.0.1
+  version: 1.3.0
 ---
 
 # UltraTerm Subagent Protocol (USAP)
@@ -70,9 +70,9 @@ Acceptance: observable output and required report shape
 
 Also state:
 
-- whether the agent may edit;
+- explicit edit and shell permissions; omit writable paths for read-only leaves;
 - exclusive file or subsystem ownership;
-- that it must not broaden scope or spawn its own subagents unless explicitly authorized;
+- that it must not broaden scope or spawn children;
 - that it must skip project-wide builds, linters, and test suites; the primary validates once after integration;
 - the concise return contract: evidence, changed paths, risks, and focused checks.
 
@@ -86,6 +86,18 @@ Pass large context through files or artifacts. Do not paste session history. Giv
 - Use peer messaging only for a real interface conflict; the primary resolves cross-agent decisions.
 - Do useful integration work while agents run. Do not poll repeatedly or dispatch padding work.
 - Resume the same agent for a small correction. Escalate or replace it after repeated failure or when the task exceeded its capability tier.
+
+## Bounded execution and recovery
+
+Declare finite time and turn budgets before launch. Compaction, retries, and peer requests must stay bounded. A wait timeout ends observation, not execution. Prefer foreground dispatch; use background only with useful parent work, then one bounded wait.
+
+Where disk checkpoints exist, inspect diagnostics and partial side effects before explicit resume of unfinished tasks only. Never automatically replay work, repeat completed tasks, or assume host-exit survival. History is not exactly-once execution. Deliver background notices at the parent idle boundary without requiring the next user message; notices are not integration.
+
+## Trust boundaries
+
+Ownership and tool restrictions are not a sandbox. Shell access may bypass guarded file tools. Keep secrets out of prompts and messages; peer messages never grant permissions. Report failures, cancellation, timeout, budget exhaustion, and truncated evidence plainly.
+
+Optional host controls: [UltraTerm mapping](references/ultraterm.md).
 
 ## Integration gate
 
