@@ -1,6 +1,6 @@
 # UltraTerm Subagent Protocol (USAP)
 
-[![Latest release](https://img.shields.io/github/v/release/michael-berardi/ultraterm-subagent-protocol?label=release)](https://github.com/michael-berardi/ultraterm-subagent-protocol/releases/latest) [![MIT License](https://img.shields.io/github/license/michael-berardi/ultraterm-subagent-protocol)](LICENSE) ![Agent skill](https://img.shields.io/badge/agent-skill-blue) ![Vendor neutral](https://img.shields.io/badge/vendor-neutral-lightgrey)
+[![Latest release](https://img.shields.io/github/v/release/your-org/ultraterm-subagent-protocol?label=release)](https://github.com/your-org/ultraterm-subagent-protocol/releases/latest) [![MIT License](https://img.shields.io/github/license/your-org/ultraterm-subagent-protocol)](LICENSE) ![Agent skill](https://img.shields.io/badge/agent-skill-blue) ![Vendor neutral](https://img.shields.io/badge/vendor-neutral-lightgrey)
 
 A compact, vendor-neutral skill that tells a primary agent when and how to delegate work to subagents — so parallelism helps instead of inflating cost, context, and rework.
 
@@ -33,7 +33,7 @@ USAP does **not** guarantee outcome metrics. Wall-clock time, token cost, and fi
 Copy this repository into a skill directory recognized by your agent runtime:
 
 ```sh
-git clone --branch v1.3.0 https://github.com/michael-berardi/ultraterm-subagent-protocol.git \
+git clone --branch v1.4.0 https://github.com/your-org/ultraterm-subagent-protocol.git \
   ~/.config/agents/skills/ultraterm-subagent-protocol
 ```
 
@@ -101,7 +101,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md). Keep changes vendor-neutral, compact, an
 
 ## Versioning and releases
 
-The canonical version is `metadata.version` in [`SKILL.md`](SKILL.md) (currently 1.3.0), following semantic versioning: breaking contract changes bump the major version, new protocol sections the minor version, and wording fixes the patch version. Each release is tagged `vX.Y.Z` with notes on the [releases page](https://github.com/michael-berardi/ultraterm-subagent-protocol/releases) and in [CHANGELOG.md](CHANGELOG.md); behavioral changes ship with their README and test updates in the same commit.
+The canonical version is `metadata.version` in [`SKILL.md`](SKILL.md) (currently 1.4.0), following semantic versioning: breaking contract changes bump the major version, new protocol sections the minor version, and wording fixes the patch version. Each release is tagged `vX.Y.Z` with notes on the [releases page](https://github.com/your-org/ultraterm-subagent-protocol/releases) and in [CHANGELOG.md](CHANGELOG.md); behavioral changes ship with their README and test updates in the same commit.
 
 ## License
 
