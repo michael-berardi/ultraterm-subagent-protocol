@@ -4,6 +4,13 @@ All notable changes to the UltraTerm Subagent Protocol are documented here.
 The canonical version is `metadata.version` in [`SKILL.md`](SKILL.md) and
 follows [Semantic Versioning](https://semver.org/).
 
+## [1.4.0] - 2026-11-01
+
+Neutrality cleanup for public distribution.
+
+- Replace personal repository owner names in shipped docs with neutral placeholders.
+- Add a neutrality test that fails if a model id or personal name returns to shipped docs.
+
 ## [1.3.0] - 2026-10-24
 
 Reconciles the unpublished 1.2.0 recovery draft with the portable safeguards from the bundled 1.3.0 skill. Version 1.2.0 was never a public release; bundled and public versions have independent histories.
@@ -33,6 +40,7 @@ Wording and consistency fixes; no new protocol sections.
 - First public release: routing pass, adaptive concurrency, capability
   routing, dispatch contract, integration gate and efficiency scorecard.
 
-[1.3.0]: https://github.com/michael-berardi/ultraterm-subagent-protocol/compare/v1.0.1...v1.3.0
-[1.0.1]: https://github.com/michael-berardi/ultraterm-subagent-protocol/compare/v1.0.0...v1.0.1
-[1.0.0]: https://github.com/michael-berardi/ultraterm-subagent-protocol/releases/tag/v1.0.0
+[1.4.0]: https://github.com/your-org/ultraterm-subagent-protocol/compare/v1.3.0...v1.4.0
+[1.3.0]: https://github.com/your-org/ultraterm-subagent-protocol/compare/v1.0.1...v1.3.0
+[1.0.1]: https://github.com/your-org/ultraterm-subagent-protocol/compare/v1.0.0...v1.0.1
+[1.0.0]: https://github.com/your-org/ultraterm-subagent-protocol/releases/tag/v1.0.0

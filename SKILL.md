@@ -4,7 +4,7 @@ description: Use at the start of every nontrivial task and whenever deciding whe
 license: MIT
 metadata:
   acronym: USAP
-  version: 1.3.0
+  version: 1.4.0
 ---
 
 # UltraTerm Subagent Protocol (USAP)

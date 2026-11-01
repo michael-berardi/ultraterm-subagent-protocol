@@ -1,6 +1,6 @@
 # UltraTerm integration
 
-Optional host mapping for USAP 1.3.0. Installing the portable skill does not implement these controls or change routing, credentials, dependencies, or global defaults. The public skill and bundled host skill have independent release histories.
+Optional host mapping for USAP 1.4.0. Installing the portable skill does not implement these controls or change routing, credentials, dependencies, or global defaults. The public skill and bundled host skill have independent release histories.
 
 ## Inspect the running host
 
