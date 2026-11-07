@@ -42,7 +42,28 @@ PERSONAL = re.compile(
 )
 
 
+# The published repository path is the one place an owner name may appear:
+# install commands and links must resolve. Placeholders such as `your-org`
+# return 404 for anyone who copies them.
+CANONICAL_REPO = "github.com/michael-berardi/ultraterm-subagent-protocol"
+GITHUB_URL = re.compile(r"github\.com/[\w.-]+/ultraterm-subagent-protocol")
+
+
 class NeutralityTests(unittest.TestCase):
+    def test_shipped_github_urls_name_the_published_repo(self):
+        root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        bad = []
+        for rel_path in SHIPPED_FILES:
+            path = os.path.join(root, rel_path)
+            if not os.path.exists(path):
+                continue
+            with open(path, "r", encoding="utf-8") as handle:
+                for lineno, line in enumerate(handle, 1):
+                    for url in GITHUB_URL.findall(line):
+                        if url != CANONICAL_REPO:
+                            bad.append(f"{rel_path}:{lineno}: {url}")
+        self.assertEqual(bad, [], "Shipped GitHub URLs must name the published repo:\n" + "\n".join(bad))
+
     def test_shipped_docs_have_no_model_ids_or_personal_names(self):
         root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         hits = []
@@ -52,7 +73,7 @@ class NeutralityTests(unittest.TestCase):
                 continue
             with open(path, "r", encoding="utf-8") as handle:
                 for lineno, line in enumerate(handle, 1):
-                    if MODEL_CHOICE.search(line) or PERSONAL.search(line):
+                    if MODEL_CHOICE.search(line) or PERSONAL.search(line.replace(CANONICAL_REPO.split("/", 1)[1], "")):
                         hits.append(f"{rel_path}:{lineno}: {line.strip()[:120]}")
         self.assertEqual(
             hits,

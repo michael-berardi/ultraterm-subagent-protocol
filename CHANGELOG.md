@@ -4,6 +4,11 @@ All notable changes to the UltraTerm Subagent Protocol are documented here.
 The canonical version is `metadata.version` in [`SKILL.md`](SKILL.md) and
 follows [Semantic Versioning](https://semver.org/).
 
+## [1.4.1] - 2026-11-07
+
+- Restore the real repository URL in the install command, release badge and changelog links; 1.4.0 replaced it with a `your-org` placeholder that returns 404.
+- Test that every shipped GitHub URL names the published repository.
+
 ## [1.4.0] - 2026-11-01
 
 Neutrality cleanup for public distribution.
@@ -40,7 +45,8 @@ Wording and consistency fixes; no new protocol sections.
 - First public release: routing pass, adaptive concurrency, capability
   routing, dispatch contract, integration gate and efficiency scorecard.
 
-[1.4.0]: https://github.com/your-org/ultraterm-subagent-protocol/compare/v1.3.0...v1.4.0
-[1.3.0]: https://github.com/your-org/ultraterm-subagent-protocol/compare/v1.0.1...v1.3.0
-[1.0.1]: https://github.com/your-org/ultraterm-subagent-protocol/compare/v1.0.0...v1.0.1
-[1.0.0]: https://github.com/your-org/ultraterm-subagent-protocol/releases/tag/v1.0.0
+[1.4.1]: https://github.com/michael-berardi/ultraterm-subagent-protocol/compare/v1.4.0...v1.4.1
+[1.4.0]: https://github.com/michael-berardi/ultraterm-subagent-protocol/compare/v1.3.0...v1.4.0
+[1.3.0]: https://github.com/michael-berardi/ultraterm-subagent-protocol/compare/v1.0.1...v1.3.0
+[1.0.1]: https://github.com/michael-berardi/ultraterm-subagent-protocol/compare/v1.0.0...v1.0.1
+[1.0.0]: https://github.com/michael-berardi/ultraterm-subagent-protocol/releases/tag/v1.0.0
