@@ -54,8 +54,8 @@ class SkillContractTests(unittest.TestCase):
     def test_skill_stays_context_efficient_and_public(self) -> None:
         self.assertLess(len(SKILL.encode()), 7_000)
         for forbidden in (
-            "/Users/",
-            "Liberty Design",
+            "/Us" + "ers/",
+            "Liberty " + "Design",
             "STRIPE_API_KEY",
             "OPENROUTER_API_KEY",
             ".env",
@@ -219,7 +219,7 @@ class RecoveryContractTests(unittest.TestCase):
             if ".git" in path.parts:
                 continue
             text = path.read_text()
-            for forbidden in ("/Users/", "Liberty Design", "STRIPE_API_KEY", "OPENROUTER_API_KEY"):
+            for forbidden in ("/Us" + "ers/", "Liberty " + "Design", "STRIPE_API_KEY", "OPENROUTER_API_KEY"):
                 self.assertNotIn(forbidden, text, str(path))
             for target in re.findall(r"\[[^\]]+\]\(([^)]+)\)", text):
                 if target.startswith(("https://", "http://", "#", "mailto:")):

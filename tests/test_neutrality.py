@@ -10,11 +10,13 @@ Modeled on ~/dev/carl/test/neutrality.test.ts.
 
 import os
 import re
+import tempfile
 import unittest
+from pathlib import Path
 
 # Shipped documentation surfaces. LICENSE is deliberately excluded: it carries
-# legal copyright attribution that must remain intact. Tests and fixtures are
-# also excluded; they are not shipped to users.
+# legal copyright attribution that must remain intact. Personal checks additionally
+# cover tests and docs, excluding this test itself.
 SHIPPED_FILES = [
     "SKILL.md",
     "README.md",
@@ -36,8 +38,8 @@ MODEL_CHOICE = re.compile(
 # Names of people and organisations: never in the shipped docs. `/Users/` is a
 # machine-local path marker and also must not leak into public text.
 PERSONAL = re.compile(
-    r"Mike|Berardi|Dana|Felix|acme|acme|Mouseia"
-    r"|Liberty Design|libertydesign|acme|/Users/",
+    r"Mike|Berardi|Felix|Mouseia"
+    r"|Liberty Design|libertydesign|/Users/",
     re.IGNORECASE,
 )
 
@@ -47,6 +49,41 @@ PERSONAL = re.compile(
 # return 404 for anyone who copies them.
 CANONICAL_REPO = "github.com/michael-berardi/ultraterm-subagent-protocol"
 GITHUB_URL = re.compile(r"github\.com/[\w.-]+/ultraterm-subagent-protocol")
+
+
+def load_private_terms(path=None):
+    path = Path(path) if path is not None else Path(
+        os.environ.get("OSS_PRIVATE_TERMS", "~/.config/oss-audit/names.txt")
+    ).expanduser()
+    try:
+        lines = path.read_text(encoding="utf-8").splitlines()
+    except FileNotFoundError:
+        return None
+    terms = [line.strip() for line in lines if line.strip() and not line.lstrip().startswith("#")]
+    alternatives = []
+    for term in terms:
+        alternatives.append((r"(?<!\w)" if re.match(r"\w", term[0]) else "")
+                            + re.escape(term)
+                            + (r"(?!\w)" if re.match(r"\w", term[-1]) else ""))
+    return re.compile("|".join(alternatives), re.IGNORECASE) if alternatives else None
+
+
+def personal_files(root):
+    for rel_path in SHIPPED_FILES:
+        path = root / rel_path
+        if path.is_file():
+            yield path
+    seen = set()
+    for name in ("tests", "test", "Tests", "docs"):
+        base = root / name
+        if not base.is_dir() or (base.stat().st_dev, base.stat().st_ino) in seen:
+            continue
+        seen.add((base.stat().st_dev, base.stat().st_ino))
+        for path in base.rglob("*"):
+            rel = path.relative_to(root)
+            if (path.is_file() and not path.samefile(__file__)
+                    and path.suffix not in {".pyc", ".pyo", ".so", ".dylib"}):
+                yield path
 
 
 class NeutralityTests(unittest.TestCase):
@@ -64,7 +101,7 @@ class NeutralityTests(unittest.TestCase):
                             bad.append(f"{rel_path}:{lineno}: {url}")
         self.assertEqual(bad, [], "Shipped GitHub URLs must name the published repo:\n" + "\n".join(bad))
 
-    def test_shipped_docs_have_no_model_ids_or_personal_names(self):
+    def test_shipped_docs_have_no_model_ids(self):
         root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         hits = []
         for rel_path in SHIPPED_FILES:
@@ -73,13 +110,40 @@ class NeutralityTests(unittest.TestCase):
                 continue
             with open(path, "r", encoding="utf-8") as handle:
                 for lineno, line in enumerate(handle, 1):
-                    if MODEL_CHOICE.search(line) or PERSONAL.search(line.replace(CANONICAL_REPO.split("/", 1)[1], "")):
+                    if MODEL_CHOICE.search(line):
                         hits.append(f"{rel_path}:{lineno}: {line.strip()[:120]}")
         self.assertEqual(
             hits,
             [],
             "Shipped docs contain model ids or personal names:\n" + "\n".join(hits),
         )
+
+    def test_no_personal_names(self):
+        root = Path(__file__).resolve().parents[1]
+        private = load_private_terms()
+        hits = []
+        for path in personal_files(root):
+            try:
+                text = path.read_text(encoding="utf-8")
+            except UnicodeDecodeError:
+                continue
+            for lineno, line in enumerate(text.splitlines(), 1):
+                line = line.replace(CANONICAL_REPO.split("/", 1)[1], "")
+                if PERSONAL.search(line) or (private and private.search(line)):
+                    hits.append(f"{path.relative_to(root)}:{lineno}")
+        self.assertEqual(hits, [], "Personal names found in: " + ", ".join(hits))
+
+    def test_private_terms_loader(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            terms = Path(tmp) / "terms.txt"
+            terms.write_text("# comment\n\nzzqx-private-term\n", encoding="utf-8")
+            pattern = load_private_terms(terms)
+            sample = Path(tmp) / "sample.txt"
+            sample.write_text("A ZZQX-private-term here", encoding="utf-8")
+            self.assertIsNotNone(pattern.search(sample.read_text(encoding="utf-8")))
+            sample.write_text("ordinary text", encoding="utf-8")
+            self.assertIsNone(pattern.search(sample.read_text(encoding="utf-8")))
+            self.assertIsNone(pattern.search("xzzqx-private-term"))
 
 
 if __name__ == "__main__":
