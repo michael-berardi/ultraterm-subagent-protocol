@@ -106,3 +106,7 @@ The canonical version is `metadata.version` in [`SKILL.md`](SKILL.md) (currently
 ## License
 
 MIT. See [LICENSE](LICENSE).
+
+---
+
+Part of [Pareto Cybernetics](https://paretocybernetics.com/projects/usap/): free, private, open-source tools for working with AI agents.
