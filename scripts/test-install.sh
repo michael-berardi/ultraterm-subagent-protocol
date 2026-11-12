@@ -161,6 +161,32 @@ grep -q "symbolic link to $WORK/real-skill" "$WORK/last.log" || { cat "$WORK/las
 [ -L "$(skills_of "$H10")/$NAME" ] && [ -f "$WORK/real-skill/keep.txt" ] || fail "symlink or its target was changed"
 pass "symlinked skill folder is refused; link and target untouched"
 
+# 6b. A link or a .git folder anywhere inside the old copy is refused before anything moves; the link target is untouched.
+H11="$WORK/h11"; mkdir -p "$(skills_of "$H11")" "$WORK/outside"; T11="$(skills_of "$H11")/$NAME"
+printf 'precious\n' > "$WORK/outside/keep.txt"
+mkdir -p "$T11/references/deep"; cp "$WORK/expect/SKILL.md" "$T11/SKILL.md"
+ln -s "$WORK/outside" "$T11/references/deep/link"
+if run_install "$H11"; then fail "old copy with a nested symlink was accepted"; fi
+grep -q "contains a link or a .git folder" "$WORK/last.log" || { cat "$WORK/last.log" >&2; fail "nested symlink refusal message missing"; }
+[ -L "$T11/references/deep/link" ] && [ -f "$WORK/outside/keep.txt" ] || fail "nested symlink or its target was changed"
+no_leftovers "$(skills_of "$H11")" || fail "nested symlink refusal left a staging or backup folder"
+rm "$T11/references/deep/link"; mkdir "$T11/references/deep/.git"
+if run_install "$H11"; then fail "old copy with a nested .git was accepted"; fi
+grep -q "contains a link or a .git folder" "$WORK/last.log" || fail "nested .git refusal message missing"
+[ -d "$T11/references/deep/.git" ] || fail "nested .git was removed"
+no_leftovers "$(skills_of "$H11")" || fail "nested .git refusal left a staging or backup folder"
+pass "nested symlink and nested .git in the old copy are refused; nothing moved or deleted"
+
+# 6c. USAP_VERSION with a git checkout: no pull to the branch head; the git hint is printed and nothing changes.
+H12="$WORK/h12"; mkdir "$H12"; T12="$(skills_of "$H12")/$NAME"
+clone_into "$T12"
+( cd "$SEED" && printf 'newer\n' > newer.txt && git add newer.txt && $GITC commit -q -m "upstream 3" && git push -q "$ORIGIN" HEAD:refs/heads/main )
+before=$(git -C "$T12" rev-parse HEAD)
+if run_install "$H12" USAP_VERSION=9.9.9; then fail "pinned install pulled or accepted a git checkout"; fi
+grep -q "checkout v9.9.9" "$WORK/last.log" && grep -q "fetch --tags" "$WORK/last.log" || { cat "$WORK/last.log" >&2; fail "pinned install did not print the git hint"; }
+[ "$(git -C "$T12" rev-parse HEAD)" = "$before" ] && [ ! -e "$T12/newer.txt" ] || fail "pinned install pulled the checkout"
+pass "USAP_VERSION with a git checkout prints the git hint and does not pull"
+
 # 7. An unreachable release is reported by URL and installs nothing.
 H7="$WORK/h7"; mkdir "$H7"
 if run_install "$H7" "USAP_RELEASE_BASE=file://$WORK/no-such-release"; then fail "missing release was accepted"; fi

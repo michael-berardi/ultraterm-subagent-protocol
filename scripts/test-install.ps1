@@ -164,12 +164,40 @@ try {
     Write-Host 'skip - symlink test: cannot create a symbolic link here'
   }
 
+  # 6b. A link or .git anywhere inside the old copy is refused before anything moves.
+  $skills11 = Join-Path $root 'skills11'
+  $t11 = Join-Path $skills11 $name
+  $out11 = Join-Path $root 'outside'
+  New-Item -ItemType Directory -Force -Path (Join-Path $t11 'references/deep'), $out11 | Out-Null
+  Set-Content -LiteralPath (Join-Path $out11 'keep.txt') -Value 'precious'
+  Copy-Item -LiteralPath $skillFile -Destination (Join-Path $t11 'SKILL.md')
+  $linked = $false
+  try { New-Item -ItemType SymbolicLink -Path (Join-Path $t11 'references/deep/link') -Target $out11 -ErrorAction Stop | Out-Null; $linked = $true } catch { }
+  if ($linked) {
+    $r = Invoke-Installer $skills11 $Base
+    Check ($r.Code -ne 0 -and $r.Out -match 'contains a link or a \.git folder') 'nested symlink in the old copy is refused'
+    Check ((Test-Path -LiteralPath (Join-Path $out11 'keep.txt')) -and (Test-Path -LiteralPath (Join-Path $t11 'references/deep/link'))) 'nested symlink and its target are untouched'
+    Remove-Item -LiteralPath (Join-Path $t11 'references/deep/link') -Force
+  } else {
+    Write-Host 'skip - nested symlink test: cannot create a symbolic link here'
+  }
+  New-Item -ItemType Directory -Path (Join-Path $t11 'references/deep/.git') | Out-Null
+  $r = Invoke-Installer $skills11 $Base
+  Check ($r.Code -ne 0 -and $r.Out -match 'contains a link or a \.git folder') 'nested .git in the old copy is refused'
+  Check (Test-Path -LiteralPath (Join-Path $t11 'references/deep/.git')) 'nested .git is kept'
+  $entries = Get-FolderEntry $skills11
+  Check ($entries.Count -eq 1) 'refusal leaves no staging or backup folders'
+
   # 7. Static: bad Windows-only patterns must not return.
   $src = Get-Content -LiteralPath $Installer -Raw
   Check ($src -notmatch 'Move-Item\s+-LiteralPath\s+\$src') 'installer does not move the unpacked folder from %TEMP%'
   Check ($src -notmatch '\[IO\.Path\]::GetFullPath') 'installer does not resolve paths with [IO.Path]::GetFullPath'
   Check ($src -match 'ReparsePoint') 'installer checks for reparse points before removing a folder'
   Check ($src -match 'pull --ff-only') 'installer fast-forwards git checkouts instead of swapping them'
+  Check ($src -match '\[IO\.Directory\]::Delete\(\$backup') 'old copy is deleted with [IO.Directory]::Delete, which does not follow junctions'
+  Check ($src -notmatch 'Remove-Item[^\r\n]*\$backup') 'old copy is not deleted with Remove-Item -Recurse'
+  Check ($src -match 'Find-UnsafeEntry \$target') 'old copy is scanned for links and .git before the swap'
+  Check ($src -match '\$prevPrompt') 'GIT_TERMINAL_PROMPT is saved and restored'
   Write-Host "all installer tests passed for $Expected under $($PSVersionTable.PSEdition) $($PSVersionTable.PSVersion)"
 }
 finally {

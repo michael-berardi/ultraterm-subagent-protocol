@@ -12,6 +12,20 @@ function Install-Usap {
   $repo = 'michael-berardi/ultraterm-subagent-protocol'
   $name = 'ultraterm-subagent-protocol'
 
+  # Walks a folder without descending into reparse points (junctions, symlinks); returns the first reparse point or .git found.
+  function Find-UnsafeEntry([string]$root) {
+    $pending = New-Object 'System.Collections.Generic.Stack[string]'
+    $pending.Push($root)
+    while ($pending.Count -gt 0) {
+      $dir = $pending.Pop()
+      foreach ($child in @(Get-ChildItem -LiteralPath $dir -Force)) {
+        if ($child.Name -eq '.git' -or ($child.Attributes -band [IO.FileAttributes]::ReparsePoint)) { return $child.FullName }
+        if ($child.PSIsContainer) { $pending.Push($child.FullName) }
+      }
+    }
+    return $null
+  }
+
   function Get-SkillField([string]$path, [string]$field) {
     $text = Get-Content -LiteralPath $path -Raw
     $m = [regex]::Match($text, "(?m)^\s*$field\s*:\s*(\S+)\s*$")
@@ -82,11 +96,15 @@ function Install-Usap {
       finally { $ErrorActionPreference = $prevEAP }
       if ($code -ne 0) { throw "cannot read the git status of $target; nothing was changed." }
       if ($changes) { throw "$target is a git checkout with local changes; it was not changed. Commit, stash or move those changes aside, then run this again." }
+      if ($env:USAP_VERSION) {
+        throw "$target is a git checkout, and USAP_VERSION asks for a pinned release, so it was not pulled or changed. Pin it yourself with git: git -C `"$target`" fetch --tags; git -C `"$target`" checkout v$($env:USAP_VERSION.TrimStart('v'))"
+      }
       Write-Host "$target is a git checkout; updating it with git pull --ff-only..."
+      $prevPrompt = $env:GIT_TERMINAL_PROMPT
       $env:GIT_TERMINAL_PROMPT = '0'
       $ErrorActionPreference = 'Continue'
       try { $pulled = (& git -C $target pull --ff-only 2>&1 | Out-String); $code = $LASTEXITCODE }
-      finally { $ErrorActionPreference = $prevEAP }
+      finally { $ErrorActionPreference = $prevEAP; $env:GIT_TERMINAL_PROMPT = $prevPrompt }
       if ($code -ne 0) {
         throw "git pull --ff-only failed in $target; it was not changed. $pulled Update it yourself with git (for a pinned tag: git -C `"$target`" fetch --tags, then git -C `"$target`" checkout v$version), or move it aside, then run this again."
       }
@@ -95,6 +113,11 @@ function Install-Usap {
       if ($now -ne $version) { Write-Host "Note: the latest release is USAP $version; the checkout's branch declares $now." }
       Write-Host "Installed at: $target"
       return
+    }
+    # The old copy must hold no reparse point and no .git at any depth: deleting it could follow a junction out of the folder.
+    if (Test-Path -LiteralPath $target) {
+      $unsafe = Find-UnsafeEntry $target
+      if ($unsafe) { throw "$target contains a link or a .git folder ($unsafe); it was not changed. Move that aside or remove it yourself, then run this again." }
     }
     $previous = ''
     if (Test-Path -LiteralPath (Join-Path $target 'SKILL.md')) { $previous = Get-SkillField (Join-Path $target 'SKILL.md') 'version' }
@@ -110,7 +133,7 @@ function Install-Usap {
         throw "cannot put the new copy in place at $target ($($_.Exception.Message)); the previous copy was restored."
       }
       $stage = $null
-      Remove-Item -Recurse -Force -LiteralPath $backup
+      [IO.Directory]::Delete($backup, $true)
     } else {
       Move-Item -LiteralPath $stage -Destination $target
       $stage = $null

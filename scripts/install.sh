@@ -75,6 +75,9 @@ if [ -e "$TARGET/.git" ]; then
   command -v git >/dev/null 2>&1 || die "$TARGET is a git checkout, and git is not installed to update it; nothing was changed"
   changes=$(git -C "$TARGET" status --porcelain 2>&1) || die "cannot read the git status of $TARGET ($changes); nothing was changed"
   [ -z "$changes" ] || die "$TARGET is a git checkout with local changes; it was not changed. Commit, stash or move those changes aside, then run this again"
+  if [ -n "${USAP_VERSION:-}" ]; then
+    die "$TARGET is a git checkout, and USAP_VERSION asks for a pinned release, so it was not pulled or changed. Pin it yourself with git: git -C \"$TARGET\" fetch --tags; git -C \"$TARGET\" checkout v${USAP_VERSION#v}"
+  fi
   say "$TARGET is a git checkout; updating it with git pull --ff-only..."
   pulled=$(GIT_TERMINAL_PROMPT=0 git -C "$TARGET" pull --ff-only 2>&1) || die "git pull --ff-only failed in $TARGET; it was not changed. $pulled
 Update it yourself with git (for a pinned tag: git -C \"$TARGET\" fetch --tags, then git -C \"$TARGET\" checkout v$VERSION), or move it aside, then run this again"
@@ -83,6 +86,11 @@ Update it yourself with git (for a pinned tag: git -C \"$TARGET\" fetch --tags, 
   if [ "$INSTALLED" != "$VERSION" ]; then say "Note: the latest release is USAP $VERSION; the checkout's branch declares ${INSTALLED:-no version}."; fi
   say "Installed at: $TARGET"
   exit 0
+fi
+# The old copy must hold no link and no .git at any depth: moving and deleting it could follow a link out of the folder.
+if [ -d "$TARGET" ]; then
+  unsafe=$(find "$TARGET" \( -name .git -o -type l \) -print 2>/dev/null | head -n 1)
+  [ -z "$unsafe" ] || die "$TARGET contains a link or a .git folder ($unsafe); it was not changed. Move that aside or remove it yourself, then run this again"
 fi
 PREVIOUS=""
 if [ -f "$TARGET/SKILL.md" ]; then PREVIOUS=$(skill_version "$TARGET/SKILL.md"); fi

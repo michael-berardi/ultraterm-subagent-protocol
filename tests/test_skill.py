@@ -159,7 +159,7 @@ class RecoveryContractTests(unittest.TestCase):
 
     def test_release_version_and_pinned_install_agree(self) -> None:
         version = re.search(r"(?m)^  version: (\d+\.\d+\.\d+)$", SKILL).group(1)
-        self.assertEqual(version, "1.5.1")
+        self.assertEqual(version, "1.5.2")
         self.assertIn(f"--branch v{version}", self.readme)
         self.assertRegex(self.changelog, rf"(?m)^## \[{re.escape(version)}\] - \d{{4}}-\d{{2}}-\d{{2}}$")
         self.assertIn(f"USAP {version}", self.mapping)
@@ -176,6 +176,12 @@ class RecoveryContractTests(unittest.TestCase):
         self.assertIn("ReparsePoint", ps)
         self.assertNotIn("[IO.Path]::GetFullPath", ps)
         self.assertNotIn("Move-Item -LiteralPath $src", ps)
+        self.assertIn("-name .git -o -type l", sh)
+        self.assertIn("[IO.Directory]::Delete($backup, $true)", ps)
+        self.assertNotRegex(ps, r"Remove-Item[^\n]*\$backup")
+        self.assertIn("$prevPrompt", ps)
+        self.assertLess(sh.index("-name .git -o -type l"), sh.index('BACKUP="'))
+        self.assertLess(ps.index("Find-UnsafeEntry $target"), ps.index("$backup = "))
         # The git branch must finish before the swap code starts.
         self.assertLess(sh.index("pull --ff-only"), sh.index('BACKUP="'))
         self.assertLess(ps.index("pull --ff-only"), ps.index("$backup = "))

@@ -4,6 +4,13 @@ All notable changes to the UltraTerm Subagent Protocol are documented here.
 The canonical version is `metadata.version` in [`SKILL.md`](SKILL.md) and
 follows [Semantic Versioning](https://semver.org/).
 
+## [1.5.2] - 2026-11-11
+
+- Fix: both installers only checked the top level of an existing skill folder before replacing it. A folder that held a symbolic link, a junction or a nested `.git` was still moved aside and deleted recursively, and on Windows PowerShell 5.1 a recursive delete can follow a junction and delete what it points at. The installers now refuse, with one clear message and nothing changed, if the old copy contains any link or any `.git` at any depth, and the Windows installer removes the old copy with `[IO.Directory]::Delete`, which does not follow junctions.
+- Fix: with `USAP_VERSION` set, a git checkout is no longer pulled to its branch head; the installer prints the `git fetch --tags` and `git checkout v<version>` commands and stops.
+- Fix (Windows): `GIT_TERMINAL_PROMPT` is restored after the installer runs, so it no longer stays set in your session.
+- Test all of the above, including a nested symlink, a nested `.git`, and a pinned install over a git checkout.
+
 ## [1.5.1] - 2026-11-11
 
 - Fix data loss in both installers: when the skill folder was a git clone, the installer replaced it with a plain copy and deleted its `.git` folder, even when the clone was clean, taking local commits, stashes, branches and ignored files with it. A git clone is now never replaced: a clean one is updated in place with `git pull --ff-only`, and one with local changes or that cannot fast-forward is left untouched with a clear message.
@@ -56,6 +63,7 @@ Wording and consistency fixes; no new protocol sections.
 - First public release: routing pass, adaptive concurrency, capability
   routing, dispatch contract, integration gate and efficiency scorecard.
 
+[1.5.2]: https://github.com/michael-berardi/ultraterm-subagent-protocol/compare/v1.5.1...v1.5.2
 [1.5.1]: https://github.com/michael-berardi/ultraterm-subagent-protocol/compare/v1.5.0...v1.5.1
 [1.5.0]: https://github.com/michael-berardi/ultraterm-subagent-protocol/compare/v1.4.1...v1.5.0
 [1.4.1]: https://github.com/michael-berardi/ultraterm-subagent-protocol/compare/v1.4.0...v1.4.1

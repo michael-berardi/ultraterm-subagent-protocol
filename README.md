@@ -51,7 +51,7 @@ Installer variables: `USAP_SKILLS_DIR` moves the skills folder (default `~/.conf
 Manual route: clone a release into a skill directory recognized by your agent runtime:
 
 ```sh
-git clone --branch v1.5.1 https://github.com/michael-berardi/ultraterm-subagent-protocol.git \
+git clone --branch v1.5.2 https://github.com/michael-berardi/ultraterm-subagent-protocol.git \
   ~/.config/agents/skills/ultraterm-subagent-protocol
 ```
 
@@ -126,7 +126,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md). Keep changes vendor-neutral, compact, an
 
 ## Versioning and releases
 
-The canonical version is `metadata.version` in [`SKILL.md`](SKILL.md) (currently 1.5.1), following semantic versioning: breaking contract changes bump the major version, new protocol sections the minor version, and wording fixes the patch version. Each release is tagged `vX.Y.Z` with notes on the [releases page](https://github.com/michael-berardi/ultraterm-subagent-protocol/releases) and in [CHANGELOG.md](CHANGELOG.md); behavioral changes ship with their README and test updates in the same commit.
+The canonical version is `metadata.version` in [`SKILL.md`](SKILL.md) (currently 1.5.2), following semantic versioning: breaking contract changes bump the major version, new protocol sections the minor version, and wording fixes the patch version. Each release is tagged `vX.Y.Z` with notes on the [releases page](https://github.com/michael-berardi/ultraterm-subagent-protocol/releases) and in [CHANGELOG.md](CHANGELOG.md); behavioral changes ship with their README and test updates in the same commit.
 
 ## License
 
