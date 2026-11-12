@@ -4,6 +4,10 @@ All notable changes to the UltraTerm Subagent Protocol are documented here.
 The canonical version is `metadata.version` in [`SKILL.md`](SKILL.md) and
 follows [Semantic Versioning](https://semver.org/).
 
+## Unreleased
+
+- Add one-line installers: `scripts/install.sh` for macOS and Linux and `scripts/install.ps1` for Windows. Each downloads the release, checks its SHA-256 before installing, and puts the skill in `~/.config/agents/skills/ultraterm-subagent-protocol`. Running it again upgrades in place. A git checkout with local changes is never overwritten.
+
 ## [1.4.1] - 2026-11-07
 
 - Restore the real repository URL in the install command, release badge and changelog links; 1.4.0 replaced it with a `your-org` placeholder that returns 404.

@@ -20,7 +20,7 @@ The primary agent always owns interpretation, decomposition, cross-task contract
 
 ## Who it is for
 
-Operators of agent runtimes that support subagents, model tiers, or peer coordination, who want a single portable delegation policy instead of per-task improvisation. USAP is instructions only — no runtime, no dependencies, no network access.
+Operators of agent runtimes that support subagents, model tiers, or peer coordination, who want a single portable delegation policy instead of per-task improvisation. USAP is instructions only — no runtime, no dependencies, no network access once installed.
 
 ## Guarantees and non-guarantees
 
@@ -30,7 +30,25 @@ USAP does **not** guarantee outcome metrics. Wall-clock time, token cost, and fi
 
 ## Install
 
-Copy this repository into a skill directory recognized by your agent runtime:
+One line installs the skill and checks it. The installer needs only `curl` (or `wget`) and `tar`; it downloads the release, checks its SHA-256 before installing anything, and prints the installed version.
+
+macOS and Linux:
+
+```sh
+curl -fsSL https://github.com/michael-berardi/ultraterm-subagent-protocol/releases/latest/download/install.sh | sh
+```
+
+Windows, in Windows PowerShell 5.1 or PowerShell 7:
+
+```powershell
+irm https://github.com/michael-berardi/ultraterm-subagent-protocol/releases/latest/download/install.ps1 | iex
+```
+
+The skill goes to `~/.config/agents/skills/ultraterm-subagent-protocol` (on Windows, `%USERPROFILE%\.config\agents\skills\ultraterm-subagent-protocol`). The installer needs no runtime, Node, Python, or sudo, and it does not edit your shell profile or PATH. To update, run the same line again; it upgrades in place. To pin a version, put `USAP_VERSION=1.4.1` before `sh` (macOS and Linux) or set `$env:USAP_VERSION` first (Windows). To remove USAP, delete that folder. A git checkout with local changes in that folder is never overwritten: the installer stops and says so.
+
+Installer variables: `USAP_SKILLS_DIR` moves the skills folder (default `~/.config/agents/skills`).
+
+Manual route: clone a release into a skill directory recognized by your agent runtime:
 
 ```sh
 git clone --branch v1.4.1 https://github.com/michael-berardi/ultraterm-subagent-protocol.git \
@@ -80,12 +98,13 @@ USAP is a skill contract, not a service. The repository contains:
 - [`references/omp.md`](references/omp.md) — an optional mapping of the protocol onto OMP's `task` and `hub` tools.
 - [`references/ultraterm.md`](references/ultraterm.md) — optional host-specific budgets, permissions, checkpoints, explicit resume, diagnostics, and completion delivery.
 - [`tests/test_skill.py`](tests/test_skill.py) — deterministic checks of the public contract: portable frontmatter, core invariants, context-efficiency and disclosure limits, required files, cross-file rule consistency, and README freshness.
+- [`scripts/install.sh`](scripts/install.sh) and [`scripts/install.ps1`](scripts/install.ps1) — the one-line installers. They only download, verify, and place the skill folder; they do not run it.
 
-The skill is text, not executable enforcement. There are no install scripts or telemetry in this repository. Optional mappings describe host behavior, not capabilities supplied by installing the skill. Check the running host's schema and diagnostics before using them; source inspection is not end-to-end recovery proof.
+The skill is text, not executable enforcement. The repository has no telemetry. Optional mappings describe host behavior, not capabilities supplied by installing the skill. Check the running host's schema and diagnostics before using them; source inspection is not end-to-end recovery proof.
 
 ## Security and safety
 
-USAP needs no credentials, network access, or executable dependencies. Its safety posture lives in the protocol itself: one writer per shared file, weak or free models never own consequential decisions unverified, and retrieved content plus subagent output are treated as untrusted evidence until the primary verifies them. See [SECURITY.md](SECURITY.md) for the reporting policy.
+USAP needs no credentials, network access, or executable dependencies. The installers download over HTTPS and refuse any archive whose SHA-256 does not match `SHA256SUMS`. Its safety posture lives in the protocol itself: one writer per shared file, weak or free models never own consequential decisions unverified, and retrieved content plus subagent output are treated as untrusted evidence until the primary verifies them. See [SECURITY.md](SECURITY.md) for the reporting policy.
 
 ## Validate
 
@@ -94,6 +113,12 @@ python3 -m unittest discover -s tests -v
 ```
 
 The suite is standard-library only and runs offline in milliseconds.
+
+After changing `scripts/`, build the release and run the installer tests (they run offline, from a local copy of the release):
+
+```sh
+scripts/build-release.sh && scripts/test-install.sh
+```
 
 ## Contributing
 
