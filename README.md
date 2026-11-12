@@ -44,14 +44,14 @@ Windows, in Windows PowerShell 5.1 or PowerShell 7:
 irm https://github.com/michael-berardi/ultraterm-subagent-protocol/releases/latest/download/install.ps1 | iex
 ```
 
-The skill goes to `~/.config/agents/skills/ultraterm-subagent-protocol` (on Windows, `%USERPROFILE%\.config\agents\skills\ultraterm-subagent-protocol`). The installer needs no runtime, Node, Python, or sudo, and it does not edit your shell profile or PATH. To update, run the same line again; it upgrades in place. To pin a version, put `USAP_VERSION=1.4.1` before `sh` (macOS and Linux) or set `$env:USAP_VERSION` first (Windows). To remove USAP, delete that folder. A git checkout with local changes in that folder is never overwritten: the installer stops and says so.
+The skill goes to `~/.config/agents/skills/ultraterm-subagent-protocol` (on Windows, `%USERPROFILE%\.config\agents\skills\ultraterm-subagent-protocol`). The installer needs no runtime, Node, Python, or sudo, and it does not edit your shell profile or PATH. To update, run the same line again; it upgrades in place. To pin a version, put `USAP_VERSION=1.4.1` before `sh` (macOS and Linux) or set `$env:USAP_VERSION` first (Windows). To remove USAP, delete that folder. A git clone in that folder is never replaced: a clean one is updated in place with `git pull --ff-only`, and one with local changes or that cannot fast-forward is left untouched with a message. A symbolic link there is also left alone.
 
 Installer variables: `USAP_SKILLS_DIR` moves the skills folder (default `~/.config/agents/skills`).
 
 Manual route: clone a release into a skill directory recognized by your agent runtime:
 
 ```sh
-git clone --branch v1.5.0 https://github.com/michael-berardi/ultraterm-subagent-protocol.git \
+git clone --branch v1.5.1 https://github.com/michael-berardi/ultraterm-subagent-protocol.git \
   ~/.config/agents/skills/ultraterm-subagent-protocol
 ```
 
@@ -126,7 +126,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md). Keep changes vendor-neutral, compact, an
 
 ## Versioning and releases
 
-The canonical version is `metadata.version` in [`SKILL.md`](SKILL.md) (currently 1.5.0), following semantic versioning: breaking contract changes bump the major version, new protocol sections the minor version, and wording fixes the patch version. Each release is tagged `vX.Y.Z` with notes on the [releases page](https://github.com/michael-berardi/ultraterm-subagent-protocol/releases) and in [CHANGELOG.md](CHANGELOG.md); behavioral changes ship with their README and test updates in the same commit.
+The canonical version is `metadata.version` in [`SKILL.md`](SKILL.md) (currently 1.5.1), following semantic versioning: breaking contract changes bump the major version, new protocol sections the minor version, and wording fixes the patch version. Each release is tagged `vX.Y.Z` with notes on the [releases page](https://github.com/michael-berardi/ultraterm-subagent-protocol/releases) and in [CHANGELOG.md](CHANGELOG.md); behavioral changes ship with their README and test updates in the same commit.
 
 ## License
 

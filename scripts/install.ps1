@@ -2,12 +2,13 @@
 #   irm https://github.com/michael-berardi/ultraterm-subagent-protocol/releases/latest/download/install.ps1 | iex
 # Downloads the latest release (usap.zip), checks its SHA-256 against SHA256SUMS, and installs the skill folder to
 # %USERPROFILE%\.config\agents\skills\ultraterm-subagent-protocol. USAP is text, so it needs no runtime. Re-running upgrades
-# in place. A git checkout with local changes is never overwritten. Nothing is added to PATH and no profile is edited.
+# in place. A git checkout is never replaced: if clean it is updated with git pull --ff-only, otherwise it is left alone. Nothing is added to PATH and no profile is edited.
 # Environment: USAP_SKILLS_DIR (default <home>\.config\agents\skills), USAP_VERSION (pin, e.g. 1.4.1),
 # USAP_RELEASE_BASE (override the download base URL, used by tests).
 # The work runs inside a function so that $ErrorActionPreference is not left changed in the caller's session when run with iex.
 function Install-Usap {
   $ErrorActionPreference = 'Stop'
+  $ProgressPreference = 'SilentlyContinue'
   $repo = 'michael-berardi/ultraterm-subagent-protocol'
   $name = 'ultraterm-subagent-protocol'
 
@@ -29,7 +30,7 @@ function Install-Usap {
   $userHome = [Environment]::GetFolderPath('UserProfile')
   if (-not $userHome) { throw 'USAP install: cannot find your home folder (USERPROFILE is not set).' }
   $skillsDir = if ($env:USAP_SKILLS_DIR) { $env:USAP_SKILLS_DIR } else { Join-Path (Join-Path (Join-Path $userHome '.config') 'agents') 'skills' }
-  $skillsDir = [IO.Path]::GetFullPath($skillsDir)
+  $skillsDir = $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($skillsDir)
   if ($env:USAP_RELEASE_BASE) { $base = $env:USAP_RELEASE_BASE }
   elseif ($env:USAP_VERSION) { $base = "https://github.com/$repo/releases/download/v$($env:USAP_VERSION.TrimStart('v'))" }
   else { $base = "https://github.com/$repo/releases/latest/download" }
@@ -50,8 +51,11 @@ function Install-Usap {
     $got = (Get-FileHash -LiteralPath (Join-Path $tmp 'usap.zip') -Algorithm SHA256).Hash.ToLower()
     if ($got -ne $want) { throw "checksum mismatch for usap.zip (expected $want, got $got); nothing was installed." }
 
-    $src = Join-Path $tmp 'src'
-    try { Expand-Archive -LiteralPath (Join-Path $tmp 'usap.zip') -DestinationPath $src -Force }
+    # Unpack straight into a staging folder under the skills folder (a move from %TEMP% can fail across drives on 5.1).
+    New-Item -ItemType Directory -Force -Path $skillsDir | Out-Null
+    $stage = Join-Path $skillsDir (".$name.new." + [guid]::NewGuid().ToString('N'))
+    $src = $stage
+    try { Expand-Archive -LiteralPath (Join-Path $tmp 'usap.zip') -DestinationPath $stage -Force }
     catch { throw "cannot unpack the download ($($_.Exception.Message)); nothing was installed." }
     $skillFile = Join-Path $src 'SKILL.md'
     if (-not (Test-Path -LiteralPath $skillFile)) { throw 'the download is not a USAP release (no SKILL.md inside); nothing was installed.' }
@@ -60,24 +64,40 @@ function Install-Usap {
     $version = Get-SkillField $skillFile 'version'
     if (-not $version) { throw 'cannot read the version from SKILL.md in the download; nothing was installed.' }
 
-    New-Item -ItemType Directory -Force -Path $skillsDir | Out-Null
     $target = Join-Path $skillsDir $name
-    # A git checkout is upgraded only when it has no local changes.
+    # A symlinked or junctioned skill folder is never replaced: removing it could delete what it points at.
+    if (Test-Path -LiteralPath $target) {
+      $item = Get-Item -LiteralPath $target -Force
+      if ($item.Attributes -band [IO.FileAttributes]::ReparsePoint) {
+        throw "$target is a symbolic link or junction (to $($item.Target)); it was not changed. Remove the link yourself if you want the installer to manage this folder, then run this again."
+      }
+    }
+    # A git checkout is never swapped: commits, stashes, branches and ignored files would be lost with its .git folder.
+    # A clean checkout is fast-forwarded in place; anything else is left alone.
     if (Test-Path -LiteralPath (Join-Path $target '.git')) {
-      if (-not (Get-Command git -ErrorAction SilentlyContinue)) { throw "$target is a git checkout, and git is not installed to check its local changes; nothing was changed." }
+      if (-not (Get-Command git -ErrorAction SilentlyContinue)) { throw "$target is a git checkout, and git is not installed to update it; nothing was changed." }
       $prevEAP = $ErrorActionPreference
       $ErrorActionPreference = 'Continue'
       try { $changes = & git -C $target status --porcelain 2>&1; $code = $LASTEXITCODE }
       finally { $ErrorActionPreference = $prevEAP }
       if ($code -ne 0) { throw "cannot read the git status of $target; nothing was changed." }
       if ($changes) { throw "$target is a git checkout with local changes; it was not changed. Commit, stash or move those changes aside, then run this again." }
+      Write-Host "$target is a git checkout; updating it with git pull --ff-only..."
+      $env:GIT_TERMINAL_PROMPT = '0'
+      $ErrorActionPreference = 'Continue'
+      try { $pulled = (& git -C $target pull --ff-only 2>&1 | Out-String); $code = $LASTEXITCODE }
+      finally { $ErrorActionPreference = $prevEAP }
+      if ($code -ne 0) {
+        throw "git pull --ff-only failed in $target; it was not changed. $pulled Update it yourself with git (for a pinned tag: git -C `"$target`" fetch --tags, then git -C `"$target`" checkout v$version), or move it aside, then run this again."
+      }
+      $now = Get-SkillField (Join-Path $target 'SKILL.md') 'version'
+      Write-Host "Updated the git checkout at $target; it now declares USAP $now."
+      if ($now -ne $version) { Write-Host "Note: the latest release is USAP $version; the checkout's branch declares $now." }
+      Write-Host "Installed at: $target"
+      return
     }
     $previous = ''
     if (Test-Path -LiteralPath (Join-Path $target 'SKILL.md')) { $previous = Get-SkillField (Join-Path $target 'SKILL.md') 'version' }
-
-    $stage = Join-Path $skillsDir (".$name.new." + [guid]::NewGuid().ToString('N'))
-    try { Move-Item -LiteralPath $src -Destination $stage }
-    catch { throw "cannot stage the download in $skillsDir ($($_.Exception.Message)); nothing was changed." }
 
     # Swap with renames: the old copy moves aside, the new one moves in, then the old one is removed.
     if (Test-Path -LiteralPath $target) {

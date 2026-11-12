@@ -159,13 +159,26 @@ class RecoveryContractTests(unittest.TestCase):
 
     def test_release_version_and_pinned_install_agree(self) -> None:
         version = re.search(r"(?m)^  version: (\d+\.\d+\.\d+)$", SKILL).group(1)
-        self.assertEqual(version, "1.5.0")
+        self.assertEqual(version, "1.5.1")
         self.assertIn(f"--branch v{version}", self.readme)
         self.assertRegex(self.changelog, rf"(?m)^## \[{re.escape(version)}\] - \d{{4}}-\d{{2}}-\d{{2}}$")
         self.assertIn(f"USAP {version}", self.mapping)
         self.assertNotIn("Unreleased", self.readme + SKILL + self.mapping)
         for previous in ("[1.0.1]", "[1.0.0]"):
             self.assertIn(previous, self.changelog)
+
+    def test_installers_never_swap_a_git_checkout_or_a_link(self) -> None:
+        sh = (ROOT / "scripts/install.sh").read_text()
+        ps = (ROOT / "scripts/install.ps1").read_text()
+        for text in (sh, ps):
+            self.assertIn("pull --ff-only", text)
+        self.assertIn('[ -L "$TARGET" ]', sh)
+        self.assertIn("ReparsePoint", ps)
+        self.assertNotIn("[IO.Path]::GetFullPath", ps)
+        self.assertNotIn("Move-Item -LiteralPath $src", ps)
+        # The git branch must finish before the swap code starts.
+        self.assertLess(sh.index("pull --ff-only"), sh.index('BACKUP="'))
+        self.assertLess(ps.index("pull --ff-only"), ps.index("$backup = "))
 
     def test_core_budget_and_recovery_rules(self) -> None:
         for phrase in (

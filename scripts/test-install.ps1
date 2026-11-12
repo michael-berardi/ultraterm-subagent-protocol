@@ -83,29 +83,93 @@ try {
   Check ($r.Code -ne 0 -and $r.Out -match '(?s)download failed:.*no-such-release/usap\.zip') 'unreachable release is named by URL'
   Check (-not (Test-Path -LiteralPath $skills4)) 'unreachable release creates no folder'
 
-  # 5 and 6. Git checkouts: local changes are protected; a clean checkout is upgraded.
+  # 5. Git checkouts are never swapped; a clean one is fast-forwarded. Each is a clone of a local origin.
   if (Get-Command git -ErrorAction SilentlyContinue) {
+    $gitc = @('-c', 'user.name=usap-test', '-c', 'user.email=usap-test@example.invalid')
+    function Invoke-Git([string]$dir, [string[]]$gitArgs) { $o = (& git -C $dir @gitc @gitArgs 2>&1 | Out-String); if ($LASTEXITCODE -ne 0) { throw "git $gitArgs failed: $o" }; return $o }
+    $origin = Join-Path $root 'origin.git'
+    $seed = Join-Path $root 'seed'
+    & git init -q --bare $origin 2>&1 | Out-Null
+    New-Item -ItemType Directory -Path $seed | Out-Null
+    & git init -q $seed 2>&1 | Out-Null
+    Copy-Item -LiteralPath $skillFile -Destination (Join-Path $seed 'SKILL.md')
+    Invoke-Git $seed @('add', 'SKILL.md') | Out-Null
+    Invoke-Git $seed @('commit', '-q', '-m', 'seed') | Out-Null
+    Invoke-Git $seed @('push', '-q', $origin, 'HEAD:refs/heads/main') | Out-Null
+    & git -C $origin symbolic-ref HEAD refs/heads/main 2>&1 | Out-Null
+    function New-Clone([string]$skillsFolder) {
+      New-Item -ItemType Directory -Force -Path $skillsFolder | Out-Null
+      $d = Join-Path $skillsFolder $name
+      & git clone -q $origin $d 2>&1 | Out-Null
+      return $d
+    }
+
     $skills5 = Join-Path $root 'skills5'
-    $t5 = Join-Path $skills5 $name
-    New-Item -ItemType Directory -Path $t5 | Out-Null
-    Copy-Item -LiteralPath $skillFile -Destination (Join-Path $t5 'SKILL.md')
-    Push-Location $t5
-    try {
-      & git init -q 2>&1 | Out-Null
-      & git add SKILL.md 2>&1 | Out-Null
-      & git -c user.name=usap-test -c user.email=usap-test@example.invalid commit -q -m 'test checkout' 2>&1 | Out-Null
-      Add-Content -LiteralPath (Join-Path $t5 'SKILL.md') -Value 'local edit'
-      $r = Invoke-Installer $skills5 $Base
-      Check ($r.Code -ne 0 -and $r.Out -match 'local changes; it was not changed') 'git checkout with local changes is refused'
-      Check ((Get-Content -LiteralPath (Join-Path $t5 'SKILL.md') -Raw) -match 'local edit') 'refused checkout keeps its local edit'
-      Check (Test-Path -LiteralPath (Join-Path $t5 '.git')) 'refused checkout keeps its .git folder'
-      & git checkout -q -- SKILL.md 2>&1 | Out-Null
-    } finally { Pop-Location }
+    $t5 = New-Clone $skills5
+    Add-Content -LiteralPath (Join-Path $t5 'SKILL.md') -Value 'local edit'
     $r = Invoke-Installer $skills5 $Base
-    Check ($r.Code -eq 0 -and -not (Test-Path -LiteralPath (Join-Path $t5 '.git'))) 'clean git checkout is upgraded to the release copy'
+    Check ($r.Code -ne 0 -and $r.Out -match 'local changes; it was not changed') 'git checkout with local changes is refused'
+    Check ((Get-Content -LiteralPath (Join-Path $t5 'SKILL.md') -Raw) -match 'local edit') 'refused checkout keeps its local edit'
+    Check (Test-Path -LiteralPath (Join-Path $t5 '.git')) 'refused checkout keeps its .git folder'
+    Invoke-Git $t5 @('checkout', '-q', '--', 'SKILL.md') | Out-Null
+
+    Set-Content -LiteralPath (Join-Path $t5 'notes.txt') -Value 'extra'
+    Invoke-Git $t5 @('add', 'notes.txt') | Out-Null
+    Invoke-Git $t5 @('commit', '-q', '-m', 'unpushed local work') | Out-Null
+    $mine = (Invoke-Git $t5 @('rev-parse', 'HEAD')).Trim()
+    $r = Invoke-Installer $skills5 $Base
+    Check ($r.Code -eq 0 -and (Test-Path -LiteralPath (Join-Path $t5 '.git'))) 'clean checkout with an unpushed commit keeps its .git'
+    Check ((Invoke-Git $t5 @('rev-parse', 'HEAD')).Trim() -eq $mine -and (Test-Path -LiteralPath (Join-Path $t5 'notes.txt'))) 'the unpushed local commit is kept'
+
+    Add-Content -LiteralPath (Join-Path $t5 'SKILL.md') -Value 'wip'
+    Invoke-Git $t5 @('stash', 'push', '-q', '-m', 'wip') | Out-Null
+    $r = Invoke-Installer $skills5 $Base
+    Check ($r.Code -eq 0 -and (Test-Path -LiteralPath (Join-Path $t5 '.git')) -and (Invoke-Git $t5 @('stash', 'list')).Trim()) 'checkout with a stash is not replaced and keeps the stash'
+
+    $t6 = New-Clone (Join-Path $root 'skills6')
+    Set-Content -LiteralPath (Join-Path $seed 'more.txt') -Value 'more'
+    Invoke-Git $seed @('add', 'more.txt') | Out-Null
+    Invoke-Git $seed @('commit', '-q', '-m', 'upstream') | Out-Null
+    Invoke-Git $seed @('push', '-q', $origin, 'HEAD:refs/heads/main') | Out-Null
+    $r = Invoke-Installer (Join-Path $root 'skills6') $Base
+    Check ($r.Code -eq 0 -and (Test-Path -LiteralPath (Join-Path $t6 'more.txt')) -and (Test-Path -LiteralPath (Join-Path $t6 '.git'))) 'clean checkout behind origin is fast-forwarded in place'
+
+    $t8 = New-Clone (Join-Path $root 'skills8')
+    Set-Content -LiteralPath (Join-Path $t8 'mine.txt') -Value 'mine'
+    Invoke-Git $t8 @('add', 'mine.txt') | Out-Null
+    Invoke-Git $t8 @('commit', '-q', '-m', 'local') | Out-Null
+    Set-Content -LiteralPath (Join-Path $seed 'x.txt') -Value 'x'
+    Invoke-Git $seed @('add', 'x.txt') | Out-Null
+    Invoke-Git $seed @('commit', '-q', '-m', 'upstream 2') | Out-Null
+    Invoke-Git $seed @('push', '-q', $origin, 'HEAD:refs/heads/main') | Out-Null
+    $mine = (Invoke-Git $t8 @('rev-parse', 'HEAD')).Trim()
+    $r = Invoke-Installer (Join-Path $root 'skills8') $Base
+    Check ($r.Code -ne 0 -and $r.Out -match 'git pull --ff-only failed' -and (Invoke-Git $t8 @('rev-parse', 'HEAD')).Trim() -eq $mine) 'checkout that cannot fast-forward is refused and unchanged'
   } else {
     Write-Host 'skip - git checkout tests: git is not on PATH'
   }
+
+  # 6. A symlinked skill folder is refused and its target is untouched (needs symlink rights; always available on Linux).
+  $skills10 = Join-Path $root 'skills10'
+  $real = Join-Path $root 'real-skill'
+  New-Item -ItemType Directory -Force -Path $skills10, $real | Out-Null
+  Set-Content -LiteralPath (Join-Path $real 'keep.txt') -Value 'precious'
+  $linked = $false
+  try { New-Item -ItemType SymbolicLink -Path (Join-Path $skills10 $name) -Target $real -ErrorAction Stop | Out-Null; $linked = $true } catch { }
+  if ($linked) {
+    $r = Invoke-Installer $skills10 $Base
+    Check ($r.Code -ne 0 -and $r.Out -match 'symbolic link or junction') 'symlinked skill folder is refused'
+    Check (Test-Path -LiteralPath (Join-Path $real 'keep.txt')) 'the symlink target keeps its files'
+  } else {
+    Write-Host 'skip - symlink test: cannot create a symbolic link here'
+  }
+
+  # 7. Static: bad Windows-only patterns must not return.
+  $src = Get-Content -LiteralPath $Installer -Raw
+  Check ($src -notmatch 'Move-Item\s+-LiteralPath\s+\$src') 'installer does not move the unpacked folder from %TEMP%'
+  Check ($src -notmatch '\[IO\.Path\]::GetFullPath') 'installer does not resolve paths with [IO.Path]::GetFullPath'
+  Check ($src -match 'ReparsePoint') 'installer checks for reparse points before removing a folder'
+  Check ($src -match 'pull --ff-only') 'installer fast-forwards git checkouts instead of swapping them'
   Write-Host "all installer tests passed for $Expected under $($PSVersionTable.PSEdition) $($PSVersionTable.PSVersion)"
 }
 finally {

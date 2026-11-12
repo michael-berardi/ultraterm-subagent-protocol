@@ -4,6 +4,13 @@ All notable changes to the UltraTerm Subagent Protocol are documented here.
 The canonical version is `metadata.version` in [`SKILL.md`](SKILL.md) and
 follows [Semantic Versioning](https://semver.org/).
 
+## [1.5.1] - 2026-11-11
+
+- Fix data loss in both installers: when the skill folder was a git clone, the installer replaced it with a plain copy and deleted its `.git` folder, even when the clone was clean, taking local commits, stashes, branches and ignored files with it. A git clone is now never replaced: a clean one is updated in place with `git pull --ff-only`, and one with local changes or that cannot fast-forward is left untouched with a clear message.
+- Refuse to replace a symbolic link or junction at the skill folder; on Windows removing one could delete the folder it pointed at. The message names the link target.
+- Windows: unpack the download into a staging folder inside the skills folder, which avoids a failing move across drives on Windows PowerShell 5.1, and resolve a relative `USAP_SKILLS_DIR` the PowerShell way.
+- Test the above, including a clean clone with an unpushed commit, a clone with a stash, a diverged clone and a symlinked folder.
+
 ## [1.5.0] - 2026-11-11
 
 - Add one-line installers: `scripts/install.sh` for macOS and Linux and `scripts/install.ps1` for Windows. Each downloads the release, checks its SHA-256 before installing, and puts the skill in `~/.config/agents/skills/ultraterm-subagent-protocol`. Running it again upgrades in place. A git checkout with local changes is never overwritten.
@@ -49,6 +56,7 @@ Wording and consistency fixes; no new protocol sections.
 - First public release: routing pass, adaptive concurrency, capability
   routing, dispatch contract, integration gate and efficiency scorecard.
 
+[1.5.1]: https://github.com/michael-berardi/ultraterm-subagent-protocol/compare/v1.5.0...v1.5.1
 [1.5.0]: https://github.com/michael-berardi/ultraterm-subagent-protocol/compare/v1.4.1...v1.5.0
 [1.4.1]: https://github.com/michael-berardi/ultraterm-subagent-protocol/compare/v1.4.0...v1.4.1
 [1.4.0]: https://github.com/michael-berardi/ultraterm-subagent-protocol/compare/v1.3.0...v1.4.0

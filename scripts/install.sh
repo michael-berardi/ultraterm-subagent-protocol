@@ -3,7 +3,7 @@
 #   curl -fsSL https://github.com/michael-berardi/ultraterm-subagent-protocol/releases/latest/download/install.sh | sh
 # Downloads the latest release (usap.tar.gz), checks its SHA-256 against SHA256SUMS, and installs the skill folder to
 # ~/.config/agents/skills/ultraterm-subagent-protocol. USAP is text, so it needs no runtime, no Node and no Python.
-# Re-running upgrades in place. A git checkout with local changes is never overwritten. Never uses sudo or edits shell profiles.
+# Re-running upgrades in place. A git checkout is never replaced: if clean it is updated with git pull --ff-only, otherwise it is left alone. Never uses sudo or edits shell profiles.
 # Environment: USAP_SKILLS_DIR (default ~/.config/agents/skills), USAP_VERSION (pin, e.g. 1.4.1),
 # USAP_RELEASE_BASE (override the download base URL, used by tests).
 set -eu
@@ -64,11 +64,25 @@ VERSION=$(skill_version "$TMP/src/SKILL.md")
 [ -n "$VERSION" ] || die "cannot read the version from SKILL.md in the download; nothing was installed"
 
 TARGET="$SKILLS_DIR/$NAME"
-# A git checkout (for example one made with `git clone`) is upgraded only when it has no local changes.
+# A symlinked skill folder is never replaced: the swap would remove the link, or the folder it points at.
+if [ -L "$TARGET" ]; then
+  link=$(readlink "$TARGET" 2>/dev/null || true)
+  die "$TARGET is a symbolic link to ${link:-another folder}; it was not changed. Remove the link yourself if you want the installer to manage this folder, then run this again"
+fi
+# A git checkout (for example one made with `git clone`) is never swapped: commits, stashes, branches and ignored files
+# would be lost with its .git folder. A clean checkout is fast-forwarded in place; anything else is left alone.
 if [ -e "$TARGET/.git" ]; then
-  command -v git >/dev/null 2>&1 || die "$TARGET is a git checkout, and git is not installed to check its local changes; nothing was changed"
+  command -v git >/dev/null 2>&1 || die "$TARGET is a git checkout, and git is not installed to update it; nothing was changed"
   changes=$(git -C "$TARGET" status --porcelain 2>&1) || die "cannot read the git status of $TARGET ($changes); nothing was changed"
   [ -z "$changes" ] || die "$TARGET is a git checkout with local changes; it was not changed. Commit, stash or move those changes aside, then run this again"
+  say "$TARGET is a git checkout; updating it with git pull --ff-only..."
+  pulled=$(GIT_TERMINAL_PROMPT=0 git -C "$TARGET" pull --ff-only 2>&1) || die "git pull --ff-only failed in $TARGET; it was not changed. $pulled
+Update it yourself with git (for a pinned tag: git -C \"$TARGET\" fetch --tags, then git -C \"$TARGET\" checkout v$VERSION), or move it aside, then run this again"
+  INSTALLED=$(skill_version "$TARGET/SKILL.md")
+  say "Updated the git checkout at $TARGET; it now declares USAP ${INSTALLED:-no version}."
+  if [ "$INSTALLED" != "$VERSION" ]; then say "Note: the latest release is USAP $VERSION; the checkout's branch declares ${INSTALLED:-no version}."; fi
+  say "Installed at: $TARGET"
+  exit 0
 fi
 PREVIOUS=""
 if [ -f "$TARGET/SKILL.md" ]; then PREVIOUS=$(skill_version "$TARGET/SKILL.md"); fi
