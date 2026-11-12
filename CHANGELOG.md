@@ -4,7 +4,7 @@ All notable changes to the UltraTerm Subagent Protocol are documented here.
 The canonical version is `metadata.version` in [`SKILL.md`](SKILL.md) and
 follows [Semantic Versioning](https://semver.org/).
 
-## Unreleased
+## [1.5.0] - 2026-11-11
 
 - Add one-line installers: `scripts/install.sh` for macOS and Linux and `scripts/install.ps1` for Windows. Each downloads the release, checks its SHA-256 before installing, and puts the skill in `~/.config/agents/skills/ultraterm-subagent-protocol`. Running it again upgrades in place. A git checkout with local changes is never overwritten.
 
@@ -49,6 +49,7 @@ Wording and consistency fixes; no new protocol sections.
 - First public release: routing pass, adaptive concurrency, capability
   routing, dispatch contract, integration gate and efficiency scorecard.
 
+[1.5.0]: https://github.com/michael-berardi/ultraterm-subagent-protocol/compare/v1.4.1...v1.5.0
 [1.4.1]: https://github.com/michael-berardi/ultraterm-subagent-protocol/compare/v1.4.0...v1.4.1
 [1.4.0]: https://github.com/michael-berardi/ultraterm-subagent-protocol/compare/v1.3.0...v1.4.0
 [1.3.0]: https://github.com/michael-berardi/ultraterm-subagent-protocol/compare/v1.0.1...v1.3.0
