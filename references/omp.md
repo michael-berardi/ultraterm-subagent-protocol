@@ -4,7 +4,7 @@ Apply USAP with OMP's native `task` tool and `hub` coordination.
 
 ## One-wave dispatch
 
-Put independent leaves in one `task` call, up to the USAP concurrency ceiling; queue the rest for the next wave. Shared batch context defines the goal, constraints, and cross-task contract. Each task defines its target, change or investigation, non-goals, ownership, and acceptance output.
+Put independent leaves in one `task` call, as many as host capacity allows; queue the rest for the next wave. Shared batch context defines the goal, constraints, and cross-task contract. Each task defines its target, change or investigation, non-goals, ownership, and acceptance output.
 
 Use the most specific installed agent:
 

@@ -4,7 +4,7 @@ description: Use at the start of every nontrivial task and whenever deciding whe
 license: MIT
 metadata:
   acronym: USAP
-  version: 1.5.2
+  version: 1.6.0
 ---
 
 # UltraTerm Subagent Protocol (USAP)
@@ -19,18 +19,19 @@ Before acting on a nontrivial task:
 2. Draw the dependency boundary: which leaves are independent now, which require earlier output, and which touch shared mutable state.
 3. Decide whether delegation improves **time to a correct result**. Do simple, sequential, tightly coupled, or judgment-heavy work directly.
 4. Pick the most specific available agent and the cheapest model tier that can finish the leaf reliably.
-5. Dispatch independent leaves together in one batch, up to the concurrency ceiling.
+5. Dispatch independent leaves together in one batch, as wide as host capacity allows.
 
 Do not delegate top-level decomposition. The primary has the user context; a blank agent does not. Delegate a competing local design only when tradeoffs genuinely benefit from another view.
 
 ## Adaptive concurrency
 
+Batch width is the number of leaves independent right now, never a fixed number.
+
 - **0 agents:** one known edit, one answer, or tightly coupled work.
 - **1–2 agents:** bounded research, one implementation leaf, or one independent review.
-- **3–4 agents:** several disjoint files, subsystems, audits, or evidence sources.
-- **5–8 agents:** only many genuinely independent leaves with clear ownership and enough host capacity.
+- **3 or more agents:** one per disjoint file set, subsystem, audit, or evidence source. Twenty independent repositories are twenty leaves in one batch.
 
-Never run more than 8 agents or exceed host capacity; this is the concurrency ceiling. Queue further independent leaves for the next batch.
+Never exceed host capacity: its agent limits, provider rate limits, and the machine. Let the host queue what it cannot start; with no queue, send what it accepts and the rest next batch. When a provider refuses requests, send fewer until it recovers. Never pad a batch or trim it to a habit.
 
 More agents increase token use and coordination cost. Parallelism is useful only when leaves can proceed without waiting, editing the same files, or contending for the same scarce resource.
 

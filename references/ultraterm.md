@@ -1,12 +1,12 @@
 # UltraTerm integration
 
-Optional host mapping for USAP 1.5.2. Installing the portable skill does not implement these controls or change routing, credentials, dependencies, or global defaults. The public skill and bundled host skill have independent release histories.
+Optional host mapping for USAP 1.6.0. Installing the portable skill does not implement these controls or change routing, credentials, dependencies, or global defaults. The public skill and bundled host skill have independent release histories.
 
 ## Inspect the running host
 
 Use `ultraterm_subagents` for parent dispatch and `ultraterm_hub` for parent inspection and coordination. The hub exposes `list`, `status`, finite `wait`, `cancel`, `send`, `inbox`, metadata-only `diagnose`, and explicit `resume`. Tools may be exposed lazily after dispatch. Check the actual session schema: a checkout or installed package can differ from a running session. Children must not invoke parent dispatch or launch other agents.
 
-A run accepts at most eight tasks; concurrency defaults to min(8, task count), subject to host capacity. Select an authorized run-level `model` or `profile`, never both. Do not infer model/account availability, billing permission, or provider defaults from this mapping.
+A run requests one worker per task. How many run at once is set by host capacity: the machine, the operator's configured ceilings, and a provider that is rate-limiting; the rest queue and start as slots free. The dispatch tool's schema states the current maximum tasks per run. Select an authorized run-level `model` or `profile`, never both. Do not infer model/account availability, billing permission, or provider defaults from this mapping.
 
 ## Explicit budgets
 

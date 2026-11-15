@@ -6,6 +6,7 @@ import unittest
 ROOT = Path(__file__).resolve().parents[1]
 SKILL = (ROOT / "SKILL.md").read_text()
 OMP = (ROOT / "references" / "omp.md").read_text()
+ULTRATERM = (ROOT / "references" / "ultraterm.md").read_text()
 
 
 class SkillContractTests(unittest.TestCase):
@@ -78,17 +79,15 @@ class SkillContractTests(unittest.TestCase):
         self.assertFalse(re.search(r"(?i)(api[_ -]?key|token)\s*[:=]\s*[^<{\[]", readme))
 
 class CrossFileConsistencyTests(unittest.TestCase):
-    def test_concurrency_ceiling_is_stated_and_bounds_batch_dispatch(self) -> None:
-        # The top tier's upper bound is the ceiling; it must be stated as a
-        # hard limit, and "dispatch every leaf in one batch" rules must defer
-        # to it, or both rules fire with different outcomes past the ceiling.
-        tiers = [int(n) for n in re.findall(r"\*\*(?:\d+–)?(\d+) agents?:\*\*", SKILL)]
-        self.assertTrue(tiers, "SKILL.md must list concurrency tiers")
-        ceiling = max(tiers)
-        self.assertRegex(SKILL, rf"Never run more than {ceiling} agents")
-        for name, text in (("SKILL.md", SKILL), ("references/omp.md", OMP)):
+    def test_batch_width_follows_the_work_and_is_bounded_by_host_capacity(self) -> None:
+        # No fixed agent count: the top tier is open-ended, and every "one batch"
+        # rule defers to host capacity so the two rules cannot disagree.
+        self.assertRegex(SKILL, r"\*\*3 or more agents:\*\*")
+        self.assertIn("Never exceed host capacity", SKILL)
+        for name, text in (("SKILL.md", SKILL), ("references/omp.md", OMP), ("references/ultraterm.md", ULTRATERM)):
             self.assertNotRegex(text, r"(?i)every independent leaf in one", name)
-            self.assertIn("concurrency ceiling", text, name)
+            self.assertNotRegex(text, r"(?i)more than \d+ agents|at most (eight|\d+) tasks|min\(\d+", name)
+            self.assertIn("host capacity", text, name)
 
     def test_runtime_mapping_keeps_single_writer_rule(self) -> None:
         self.assertIn("One writer owns each file", SKILL)
@@ -172,7 +171,7 @@ class RecoveryContractTests(unittest.TestCase):
 
     def test_release_version_and_pinned_install_agree(self) -> None:
         version = re.search(r"(?m)^  version: (\d+\.\d+\.\d+)$", SKILL).group(1)
-        self.assertEqual(version, "1.5.2")
+        self.assertEqual(version, "1.6.0")
         self.assertIn(f"--branch v{version}", self.readme)
         self.assertRegex(self.changelog, rf"(?m)^## \[{re.escape(version)}\] - \d{{4}}-\d{{2}}-\d{{2}}$")
         self.assertIn(f"USAP {version}", self.mapping)

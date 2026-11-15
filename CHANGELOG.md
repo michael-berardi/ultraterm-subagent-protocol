@@ -4,6 +4,12 @@ All notable changes to the UltraTerm Subagent Protocol are documented here.
 The canonical version is `metadata.version` in [`SKILL.md`](SKILL.md) and
 follows [Semantic Versioning](https://semver.org/).
 
+## [1.6.0] - 2026-11-15
+
+- Batch width is adaptive. The fixed ceiling of 8 agents is gone: a batch is as wide as the work has independent leaves, bounded by host capacity (the host's own limits, provider rate limits, and the machine). The skill now says to let the host queue what it cannot start, and to send fewer at a time when a provider starts refusing requests.
+- The UltraTerm mapping no longer states an eight-task run limit; it describes capacity-based scheduling.
+- README: the pinned install example named a version without installer assets; links that broke inside release archives are fixed; checksum and trust requirements are stated.
+
 ## [1.5.2] - 2026-11-11
 
 - Fix: both installers only checked the top level of an existing skill folder before replacing it. A folder that held a symbolic link, a junction or a nested `.git` was still moved aside and deleted recursively, and on Windows PowerShell 5.1 a recursive delete can follow a junction and delete what it points at. The installers now refuse, with one clear message and nothing changed, if the old copy contains any link or any `.git` at any depth, and the Windows installer removes the old copy with `[IO.Directory]::Delete`, which does not follow junctions.
@@ -63,6 +69,7 @@ Wording and consistency fixes; no new protocol sections.
 - First public release: routing pass, adaptive concurrency, capability
   routing, dispatch contract, integration gate and efficiency scorecard.
 
+[1.6.0]: https://github.com/michael-berardi/ultraterm-subagent-protocol/compare/v1.5.2...v1.6.0
 [1.5.2]: https://github.com/michael-berardi/ultraterm-subagent-protocol/compare/v1.5.1...v1.5.2
 [1.5.1]: https://github.com/michael-berardi/ultraterm-subagent-protocol/compare/v1.5.0...v1.5.1
 [1.5.0]: https://github.com/michael-berardi/ultraterm-subagent-protocol/compare/v1.4.1...v1.5.0
