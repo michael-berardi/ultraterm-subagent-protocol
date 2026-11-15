@@ -130,6 +130,19 @@ class ReadmeContractTests(unittest.TestCase):
         contract = re.search(r"Contract:(.*?)\n\n", example, re.S).group(1)
         self.assertRegex(contract, r"\{[^}]+\}", "Contract must pin the interface shape")
 
+    def test_install_documentation_names_checksum_and_trust_requirements(self) -> None:
+        self.assertIn("`sha256sum` or `shasum`", self.readme)
+        self.assertNotIn("USAP_VERSION=1.4.1", self.readme)
+        self.assertIn("Installer assets start at v1.5.0", self.readme)
+        self.assertIn("without independently verifying it", self.readme)
+        security = (ROOT / "SECURITY.md").read_text()
+        self.assertIn("optional installers", security)
+        self.assertIn("do not independently authenticate", security)
+
+    def test_readme_links_survive_release_packaging(self) -> None:
+        for target in re.findall(r"\[[^\]]+\]\(([^)]+)\)", self.readme):
+            self.assertFalse(target.startswith(("scripts/", "tests/")), target)
+
     def test_readme_has_no_design_basis_section(self) -> None:
         self.assertNotRegex(self.readme, r"(?im)^#+ .*design basis")
 

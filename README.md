@@ -2,13 +2,11 @@
 
 [![Latest release](https://img.shields.io/github/v/release/michael-berardi/ultraterm-subagent-protocol?label=release)](https://github.com/michael-berardi/ultraterm-subagent-protocol/releases/latest) [![MIT License](https://img.shields.io/github/license/michael-berardi/ultraterm-subagent-protocol)](LICENSE) ![Agent skill](https://img.shields.io/badge/agent-skill-blue) ![Vendor neutral](https://img.shields.io/badge/vendor-neutral-lightgrey)
 
-A compact, vendor-neutral skill that tells a primary agent when and how to delegate work to subagents — so parallelism helps instead of inflating cost, context, and rework.
+A vendor-neutral skill for agent runtimes with subagents. It gives the primary agent a delegation contract, file ownership rules, and an integration checklist. Load it before dividing a task so each worker gets a bounded assignment and every result gets reviewed.
 
-## The problem
+The skill is text, not runtime enforcement. It needs no credentials or network access after installation.
 
-Ad-hoc delegation fails in predictable ways: every task gets fanned out regardless of coupling, each subagent gets the strongest model regardless of difficulty, workers receive pasted session history instead of a contract, and the primary agent accepts "done" reports without verification. The result is more tokens, more coordination, and slower delivery of a correct result.
-
-USAP replaces that with one explicit protocol, defined in [`SKILL.md`](SKILL.md):
+## Protocol
 
 1. **Routing pass** — decide whether delegation shortens the time to a correct result before dispatching anything. Simple, coupled, or judgment-heavy work stays with the primary.
 2. **Adaptive concurrency** — scale agent count to genuinely independent leaves, from zero up to a bounded ceiling; never parallelize a dependency chain.
@@ -18,19 +16,9 @@ USAP replaces that with one explicit protocol, defined in [`SKILL.md`](SKILL.md)
 
 The primary agent always owns interpretation, decomposition, cross-task contracts, consequential judgment, integration, verification, and the final answer. Subagents are bounded execution capacity, never replacement orchestrators.
 
-## Who it is for
-
-Operators of agent runtimes that support subagents, model tiers, or peer coordination, who want a single portable delegation policy instead of per-task improvisation. USAP is instructions only — no runtime, no dependencies, no network access once installed.
-
-## Guarantees and non-guarantees
-
-USAP guarantees a deterministic *process*: the routing pass, concurrency ceiling, dispatch contract shape, and integration gate in `SKILL.md` are testable, reviewable text.
-
-USAP does **not** guarantee outcome metrics. Wall-clock time, token cost, and first-pass acceptance depend on the host runtime, the models available, and the task. The protocol defines an efficiency scorecard (first-pass acceptance, rework rate, time to integrated proof, total cost) so outcomes can be measured honestly rather than assumed.
-
 ## Install
 
-One line installs the skill and checks it. The installer needs only `curl` (or `wget`) and `tar`; it downloads the release, checks its SHA-256 before installing anything, and prints the installed version.
+The installer downloads a release, verifies its archive checksum, and prints the installed version. On macOS and Linux it requires `curl` (or `wget`), `tar`, and `sha256sum` or `shasum`, plus standard shell utilities. Windows uses built-in PowerShell commands.
 
 macOS and Linux:
 
@@ -44,9 +32,9 @@ Windows, in Windows PowerShell 5.1 or PowerShell 7:
 irm https://github.com/michael-berardi/ultraterm-subagent-protocol/releases/latest/download/install.ps1 | iex
 ```
 
-The skill goes to `~/.config/agents/skills/ultraterm-subagent-protocol` (on Windows, `%USERPROFILE%\.config\agents\skills\ultraterm-subagent-protocol`). The installer needs no runtime, Node, Python, or sudo, and it does not edit your shell profile or PATH. To update, run the same line again; it upgrades in place. To pin a version, put `USAP_VERSION=1.4.1` before `sh` (macOS and Linux) or set `$env:USAP_VERSION` first (Windows). To remove USAP, delete that folder. A git clone in that folder is never replaced: a clean one is updated in place with `git pull --ff-only`, and one with local changes or that cannot fast-forward is left untouched with a message. A symbolic link there is also left alone.
+The skill goes to `~/.config/agents/skills/ultraterm-subagent-protocol` (on Windows, `%USERPROFILE%\.config\agents\skills\ultraterm-subagent-protocol`). The installer needs no runtime, Node, Python, or sudo, and it does not edit your shell profile or PATH. To update, run the same line again; it upgrades in place. To pin a version, put `USAP_VERSION=1.5.2` before `sh` (macOS and Linux) or set `$env:USAP_VERSION` first (Windows). To remove USAP, delete that folder. A git clone in that folder is never replaced: a clean one is updated in place with `git pull --ff-only`, and one with local changes or that cannot fast-forward is left untouched with a message. A symbolic link there is also left alone. Existing copies containing nested links or `.git` entries are refused. Pinned installs refuse git checkouts; use `git fetch --tags` and `git checkout v1.5.2` yourself instead.
 
-Installer variables: `USAP_SKILLS_DIR` moves the skills folder (default `~/.config/agents/skills`).
+Installer variables: `USAP_SKILLS_DIR` selects the skills folder (default `~/.config/agents/skills`); it does not move an existing installation. Installer assets start at v1.5.0; use the manual clone route for older releases.
 
 Manual route: clone a release into a skill directory recognized by your agent runtime:
 
@@ -92,19 +80,21 @@ Leaf B runs alongside Leaf A because the Contract pins the interface it consumes
 
 ## Architecture and behavior
 
-USAP is a skill contract, not a service. The repository contains:
+USAP is a skill contract, not a service. The source checkout contains (release archives omit `tests/` and `scripts/`):
 
 - [`SKILL.md`](SKILL.md) — the protocol: routing pass, adaptive concurrency tiers, capability routing table, dispatch contract, coordination rules, integration gate, and efficiency scorecard.
 - [`references/omp.md`](references/omp.md) — an optional mapping of the protocol onto OMP's `task` and `hub` tools.
 - [`references/ultraterm.md`](references/ultraterm.md) — optional host-specific budgets, permissions, checkpoints, explicit resume, diagnostics, and completion delivery.
-- [`tests/test_skill.py`](tests/test_skill.py) — deterministic checks of the public contract: portable frontmatter, core invariants, context-efficiency and disclosure limits, required files, cross-file rule consistency, and README freshness.
-- [`scripts/install.sh`](scripts/install.sh) and [`scripts/install.ps1`](scripts/install.ps1) — the one-line installers. They only download, verify, and place the skill folder; they do not run it.
+- `tests/test_skill.py` — deterministic checks of the public contract: portable frontmatter, core invariants, context-efficiency and disclosure limits, required files, cross-file rule consistency, and README freshness.
+- `scripts/install.sh` and `scripts/install.ps1` — the one-line installers. They download and verify archives, replace plain skill copies, or fast-forward existing git checkouts; they do not run the skill.
 
-The skill is text, not executable enforcement. The repository has no telemetry. Optional mappings describe host behavior, not capabilities supplied by installing the skill. Check the running host's schema and diagnostics before using them; source inspection is not end-to-end recovery proof.
+USAP guarantees a deterministic *process*: the routing pass, concurrency ceiling, dispatch contract shape, and integration gate in `SKILL.md` are testable, reviewable text.
+
+This describes the written process, not a guarantee that a host or model follows it. The skill is text, not executable enforcement. The repository has no telemetry. Optional mappings describe host behavior, not capabilities supplied by installing the skill. Check the running host's schema and diagnostics before using them; source inspection is not end-to-end recovery proof.
 
 ## Security and safety
 
-USAP needs no credentials, network access, or executable dependencies. The installers download over HTTPS and refuse any archive whose SHA-256 does not match `SHA256SUMS`. Its safety posture lives in the protocol itself: one writer per shared file, weak or free models never own consequential decisions unverified, and retrieved content plus subagent output are treated as untrusted evidence until the primary verifies them. See [SECURITY.md](SECURITY.md) for the reporting policy.
+The installed skill needs no credentials, network access, or executable dependencies. The installers require network access for public releases and refuse archives whose SHA-256 does not match `SHA256SUMS`. Checksums detect corruption, not a compromised release publisher. The one-line commands execute the downloaded installer without independently verifying it; download and inspect it first if required by your trust policy. Its safety posture lives in the protocol itself: one writer per shared file, weak or free models never own consequential decisions unverified, and retrieved content plus subagent output are treated as untrusted evidence until the primary verifies them. See [SECURITY.md](SECURITY.md) for the reporting policy.
 
 ## Validate
 
@@ -112,17 +102,19 @@ USAP needs no credentials, network access, or executable dependencies. The insta
 python3 -m unittest discover -s tests -v
 ```
 
-The suite is standard-library only and runs offline in milliseconds.
+The suite uses only the Python standard library. It checks documentation contracts, not runtime enforcement or host recovery.
 
-After changing `scripts/`, build the release and run the installer tests (they run offline, from a local copy of the release):
+From a clean committed checkout, build the release and run the shell installer tests (offline, using a local release copy):
 
 ```sh
 scripts/build-release.sh && scripts/test-install.sh
 ```
 
+The build writes `dist/release/` and packages `HEAD`, not uncommitted edits. PowerShell tests are separate: see the setup and invocation in `scripts/test-install.ps1`.
+
 ## Contributing
 
-See [CONTRIBUTING.md](CONTRIBUTING.md). Keep changes vendor-neutral, compact, and grounded in observable workflow outcomes; structural contract changes need a deterministic test.
+See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Versioning and releases
 

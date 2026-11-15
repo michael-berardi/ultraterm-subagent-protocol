@@ -4,8 +4,6 @@ USAP ships no built-in model id, provider default, fallback chain, paid-route
 allowlist, or personal/project name. Those choices belong to the operator's
 config and the host's own provider catalog. This test keeps the shipped docs
 neutral.
-
-Modeled on ~/dev/carl/test/neutrality.test.ts.
 """
 
 import os
