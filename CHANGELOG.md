@@ -4,6 +4,12 @@ All notable changes to the UltraTerm Subagent Protocol are documented here.
 The canonical version is `metadata.version` in [`SKILL.md`](SKILL.md) and
 follows [Semantic Versioning](https://semver.org/).
 
+## [1.7.1] - 2026-11-26
+
+- Add a README `## Privacy` section: the installed skill makes no network calls or telemetry, the installer's downloads are user-invoked and checksum-verified, local files are only the installed text, and the agent's configured model provider sees the prompts sent to it.
+- Remove third-party badge images from the README so opening the docs loads no external assets.
+- Add an offline test that fails on telemetry/analytics SDKs or endpoints, embedded third-party assets, or network calls in the portable skill instructions.
+
 ## [1.7.0] - 2026-11-25
 
 All 1.7.0 capabilities below are documented as portable protocol guidance and optional target-host contracts in the UltraTerm mapping; installing the portable skill does not implement host runtime controls, and these 1.7.0 target contracts were not part of the 2026-10-24 host inspection.
@@ -79,6 +85,7 @@ Wording and consistency fixes; no new protocol sections.
 - First public release: routing pass, adaptive concurrency, capability
   routing, dispatch contract, integration gate and efficiency scorecard.
 
+[1.7.1]: https://github.com/michael-berardi/ultraterm-subagent-protocol/compare/v1.7.0...v1.7.1
 [1.7.0]: https://github.com/michael-berardi/ultraterm-subagent-protocol/compare/v1.6.0...v1.7.0
 [1.6.0]: https://github.com/michael-berardi/ultraterm-subagent-protocol/compare/v1.5.2...v1.6.0
 [1.5.2]: https://github.com/michael-berardi/ultraterm-subagent-protocol/compare/v1.5.1...v1.5.2

@@ -171,7 +171,7 @@ class RecoveryContractTests(unittest.TestCase):
 
     def test_release_version_and_pinned_install_agree(self) -> None:
         version = re.search(r"(?m)^  version: (\d+\.\d+\.\d+)$", SKILL).group(1)
-        self.assertEqual(version, "1.7.0")
+        self.assertEqual(version, "1.7.1")
         self.assertIn(f"USAP_VERSION={version}", self.readme)
         self.assertIn(f"--branch v{version}", self.readme)
         self.assertRegex(self.changelog, rf"(?m)^## \[{re.escape(version)}\] - \d{{4}}-\d{{2}}-\d{{2}}$")

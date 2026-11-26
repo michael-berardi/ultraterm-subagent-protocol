@@ -1,6 +1,6 @@
 # UltraTerm Subagent Protocol (USAP)
 
-[![Latest release](https://img.shields.io/github/v/release/michael-berardi/ultraterm-subagent-protocol?label=release)](https://github.com/michael-berardi/ultraterm-subagent-protocol/releases/latest) [![MIT License](https://img.shields.io/github/license/michael-berardi/ultraterm-subagent-protocol)](LICENSE) ![Agent skill](https://img.shields.io/badge/agent-skill-blue) ![Vendor neutral](https://img.shields.io/badge/vendor-neutral-lightgrey)
+[Latest release](https://github.com/michael-berardi/ultraterm-subagent-protocol/releases/latest) · [MIT License](LICENSE) · Agent skill · Vendor neutral
 
 A vendor-neutral skill for agent runtimes with subagents. It gives the primary agent a delegation contract, file ownership rules, and an integration checklist. Load it before dividing a task so each worker gets a bounded assignment and every result gets reviewed.
 
@@ -32,14 +32,14 @@ Windows, in Windows PowerShell 5.1 or PowerShell 7:
 irm https://github.com/michael-berardi/ultraterm-subagent-protocol/releases/latest/download/install.ps1 | iex
 ```
 
-The skill goes to `~/.config/agents/skills/ultraterm-subagent-protocol` (on Windows, `%USERPROFILE%\.config\agents\skills\ultraterm-subagent-protocol`). The installer needs no runtime, Node, Python, or sudo, and it does not edit your shell profile or PATH. To update, run the same line again; it upgrades in place. To pin a version, put `USAP_VERSION=1.7.0` before `sh` (macOS and Linux) or set `$env:USAP_VERSION` first (Windows). To remove USAP, delete that folder. A git clone in that folder is never replaced: a clean one is updated in place with `git pull --ff-only`, and one with local changes or that cannot fast-forward is left untouched with a message. A symbolic link there is also left alone. Existing copies containing nested links or `.git` entries are refused. Pinned installs refuse git checkouts; use `git fetch --tags` and `git checkout v1.7.0` yourself instead.
+The skill goes to `~/.config/agents/skills/ultraterm-subagent-protocol` (on Windows, `%USERPROFILE%\.config\agents\skills\ultraterm-subagent-protocol`). The installer needs no runtime, Node, Python, or sudo, and it does not edit your shell profile or PATH. To update, run the same line again; it upgrades in place. To pin a version, put `USAP_VERSION=1.7.1` before `sh` (macOS and Linux) or set `$env:USAP_VERSION` first (Windows). To remove USAP, delete that folder. A git clone in that folder is never replaced: a clean one is updated in place with `git pull --ff-only`, and one with local changes or that cannot fast-forward is left untouched with a message. A symbolic link there is also left alone. Existing copies containing nested links or `.git` entries are refused. Pinned installs refuse git checkouts; use `git fetch --tags` and `git checkout v1.7.1` yourself instead.
 
 Installer variables: `USAP_SKILLS_DIR` selects the skills folder (default `~/.config/agents/skills`); it does not move an existing installation. Installer assets start at v1.5.0; use the manual clone route for older releases.
 
 Manual route: clone a release into a skill directory recognized by your agent runtime:
 
 ```sh
-git clone --branch v1.7.0 https://github.com/michael-berardi/ultraterm-subagent-protocol.git \
+git clone --branch v1.7.1 https://github.com/michael-berardi/ultraterm-subagent-protocol.git \
   ~/.config/agents/skills/ultraterm-subagent-protocol
 ```
 
@@ -92,6 +92,18 @@ USAP guarantees a deterministic *process*: the routing pass, capacity rule, disp
 
 This describes the written process, not a guarantee that a host or model follows it. The skill is text, not executable enforcement. The repository has no telemetry. Optional mappings describe host behavior, not capabilities supplied by installing the skill. Check the running host's schema and diagnostics before using them; source inspection is not end-to-end recovery proof.
 
+## Privacy
+
+The installed skill makes no network calls and sends no telemetry, analytics, crash reports, or usage data. It is plain text: it stores no logs, history, transcripts, or credentials and creates no files beyond its installed folder. To remove it, delete `~/.config/agents/skills/ultraterm-subagent-protocol` (`%USERPROFILE%\.config\agents\skills\ultraterm-subagent-protocol` on Windows).
+
+Network access happens only when you ask for it:
+
+- Running the install or update command downloads the installer, release archive, and `SHA256SUMS` from GitHub; the archive is checked before installation. A clean git checkout is fast-forwarded from the remote you configured there. Nothing is uploaded.
+- Using the skill with an agent sends your task briefs, prompts, and worker output to the model provider your agent is configured to use. That provider's retention applies; USAP adds no account or service.
+- Clicking a documentation link opens GitHub or the project page.
+
+These docs load no remote images, fonts, scripts, or other third-party assets.
+
 ## Security and safety
 
 The installed skill needs no credentials, network access, or executable dependencies. The installers require network access for public releases and refuse archives whose SHA-256 does not match `SHA256SUMS`. Checksums detect corruption, not a compromised release publisher. The one-line commands execute the downloaded installer without independently verifying it; download and inspect it first if required by your trust policy. Its safety posture lives in the protocol itself: one writer per shared file (with host-supported per-task git worktrees isolating multi-writer batches without host auto-push, while remaining a workflow boundary rather than an OS sandbox), weak or free models never own consequential decisions unverified, and retrieved content plus subagent output are treated as untrusted evidence until the primary verifies them. See [SECURITY.md](SECURITY.md) for the reporting policy.
@@ -118,7 +130,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Versioning and releases
 
-The canonical version is `metadata.version` in [`SKILL.md`](SKILL.md) (currently 1.7.0), following semantic versioning: breaking contract changes bump the major version, new protocol sections the minor version, and wording fixes the patch version. Each release is tagged `vX.Y.Z` with notes on the [releases page](https://github.com/michael-berardi/ultraterm-subagent-protocol/releases) and in [CHANGELOG.md](CHANGELOG.md); behavioral changes ship with their README and test updates in the same commit.
+The canonical version is `metadata.version` in [`SKILL.md`](SKILL.md) (currently 1.7.1), following semantic versioning: breaking contract changes bump the major version, new protocol sections the minor version, and wording fixes the patch version. Each release is tagged `vX.Y.Z` with notes on the [releases page](https://github.com/michael-berardi/ultraterm-subagent-protocol/releases) and in [CHANGELOG.md](CHANGELOG.md); behavioral changes ship with their README and test updates in the same commit.
 
 ## License
 
