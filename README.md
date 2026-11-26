@@ -99,7 +99,7 @@ It writes no logs, history, transcripts, credentials, or caches; see [PRIVACY.md
 Install/update downloads release files from GitHub on demand. Nothing is uploaded.
 Using an agent sends prompts and output to your configured model provider, whose retention applies.
 No automatic update check or prompt: skip the update command to opt out.
-To remove it, delete the installed skill folder.
+To remove it, delete the installed skill folder (default `~/.config/agents/skills/ultraterm-subagent-protocol`).
 
 ## Security and safety
 
