@@ -7,8 +7,11 @@ follows [Semantic Versioning](https://semver.org/).
 ## [1.8.0] - 2026-11-26
 
 - Ship `update.py` in the skill folder, an optional standard-library helper: `update.py` shows the new version, asks on a terminal, verifies `SHA256SUMS` before swapping folders, and keeps one rollback copy (`--rollback`); `--check` reports with exit 0, 10 or 1; `--notice` gives a daily two-line notice from a shell or session-start hook, checking in a detached background process; `--skip`, `--auto on|off|status` (off by default) and `--notify on|off|status`. A git checkout gets the git command instead of being replaced.
-- The skill text still makes no network request. `--notice` is silent and offline outside a terminal, in CI, and with `USAP_NO_UPDATE_CHECK=1`; all state is one small file in the cache folder, removed by `--auto off`.
-- Add `docs/updates.md` (update contract v1), `PRIVACY.md`, short README Updates and Privacy sections, and offline update tests.
+- The skill text still makes no network request. `update.py`'s check is one anonymous GET of the latest-release record; `--notice` is silent and offline outside a terminal, in CI, and with `USAP_NO_UPDATE_CHECK=1`; all state is one small file in the cache folder (plus a log under 256 KB with automatic updates on), removed by `--auto off`.
+- Add `docs/updates.md` (update contract v1) and a short README Updates section.
+- Add `PRIVACY.md` with what goes over the network, a local-write table giving every file the installers and `update.py` write with its lifetime and cleanup, and removal steps; the README Privacy section is a six-line summary that links to it.
+- Remove third-party badge images from the README so opening the docs loads no external assets.
+- Add offline tests: update behavior, and a privacy guard that fails on telemetry/analytics SDKs or endpoints, embedded third-party assets, network calls in the portable skill instructions, or a new log, history or cache write beyond the documented `update.py` state.
 
 ## [1.7.0] - 2026-11-25
 

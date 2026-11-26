@@ -1,6 +1,6 @@
 # UltraTerm Subagent Protocol (USAP)
 
-[![Latest release](https://img.shields.io/github/v/release/michael-berardi/ultraterm-subagent-protocol?label=release)](https://github.com/michael-berardi/ultraterm-subagent-protocol/releases/latest) [![MIT License](https://img.shields.io/github/license/michael-berardi/ultraterm-subagent-protocol)](LICENSE) ![Agent skill](https://img.shields.io/badge/agent-skill-blue) ![Vendor neutral](https://img.shields.io/badge/vendor-neutral-lightgrey)
+[Latest release](https://github.com/michael-berardi/ultraterm-subagent-protocol/releases/latest) · [MIT License](LICENSE) · Agent skill · Vendor neutral
 
 A vendor-neutral skill for agent runtimes with subagents. It gives the primary agent a delegation contract, file ownership rules, and an integration checklist. Load it before dividing a task so each worker gets a bounded assignment and every result gets reviewed.
 
@@ -99,10 +99,12 @@ This describes the written process, not a guarantee that a host or model follows
 
 ## Privacy
 
-USAP sends no telemetry, and the skill text makes no network requests.
-The optional `update.py` makes one anonymous GET to the public GitHub release record, at most once a day, only when you or a hook run it.
-It stores one small file in your cache folder. Turn it off with `USAP_NO_UPDATE_CHECK=1` or `update.py --notify off`.
-Details: [PRIVACY.md](PRIVACY.md).
+The skill is plain text: it makes no network calls, sends no telemetry, and uploads nothing.
+The optional `update.py` makes one anonymous check for a new GitHub release, at most daily, when you or a hook run it.
+Opt out with `USAP_NO_UPDATE_CHECK=1` or `update.py --notify off`; downloads are checked against `SHA256SUMS`.
+Stored locally: the skill folder and, once you run `update.py`, one small state file in your cache folder.
+Your agent sends prompts and output to its configured model provider, whose retention applies.
+To remove it, run `update.py --auto off`, then delete the skill folder. Details: [PRIVACY.md](PRIVACY.md).
 
 ## Security and safety
 
