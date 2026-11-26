@@ -66,6 +66,7 @@ class SkillContractTests(unittest.TestCase):
     def test_repository_has_required_public_files(self) -> None:
         for path in (
             "README.md",
+            "PRIVACY.md",
             "LICENSE",
             "CONTRIBUTING.md",
             "SECURITY.md",

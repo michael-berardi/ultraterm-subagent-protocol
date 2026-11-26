@@ -18,6 +18,7 @@ from pathlib import Path
 SHIPPED_FILES = [
     "SKILL.md",
     "README.md",
+    "PRIVACY.md",
     "CHANGELOG.md",
     "references/omp.md",
     "references/ultraterm.md",

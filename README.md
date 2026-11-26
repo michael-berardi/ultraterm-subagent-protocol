@@ -94,15 +94,12 @@ This describes the written process, not a guarantee that a host or model follows
 
 ## Privacy
 
-The installed skill makes no network calls and sends no telemetry, analytics, crash reports, or usage data. It is plain text: it stores no logs, history, transcripts, or credentials and creates no files beyond its installed folder. To remove it, delete `~/.config/agents/skills/ultraterm-subagent-protocol` (`%USERPROFILE%\.config\agents\skills\ultraterm-subagent-protocol` on Windows).
-
-Network access happens only when you ask for it:
-
-- Running the install or update command downloads the installer, release archive, and `SHA256SUMS` from GitHub; the archive is checked before installation. A clean git checkout is fast-forwarded from the remote you configured there. Nothing is uploaded.
-- Using the skill with an agent sends your task briefs, prompts, and worker output to the model provider your agent is configured to use. That provider's retention applies; USAP adds no account or service.
-- Clicking a documentation link opens GitHub or the project page.
-
-These docs load no remote images, fonts, scripts, or other third-party assets.
+USAP is plain text: the installed skill makes no network calls and sends no telemetry.
+It writes no logs, history, transcripts, credentials, or caches; see [PRIVACY.md](PRIVACY.md).
+Install/update downloads release files from GitHub on demand. Nothing is uploaded.
+Using an agent sends prompts and output to your configured model provider, whose retention applies.
+No automatic update check or prompt: skip the update command to opt out.
+To remove it, delete the installed skill folder.
 
 ## Security and safety
 
