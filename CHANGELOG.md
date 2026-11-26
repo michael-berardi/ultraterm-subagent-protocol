@@ -4,6 +4,12 @@ All notable changes to the UltraTerm Subagent Protocol are documented here.
 The canonical version is `metadata.version` in [`SKILL.md`](SKILL.md) and
 follows [Semantic Versioning](https://semver.org/).
 
+## [1.8.0] - 2026-11-26
+
+- Ship `update.py` in the skill folder, an optional standard-library helper: `update.py` shows the new version, asks on a terminal, verifies `SHA256SUMS` before swapping folders, and keeps one rollback copy (`--rollback`); `--check` reports with exit 0, 10 or 1; `--notice` gives a daily two-line notice from a shell or session-start hook, checking in a detached background process; `--skip`, `--auto on|off|status` (off by default) and `--notify on|off|status`. A git checkout gets the git command instead of being replaced.
+- The skill text still makes no network request. `--notice` is silent and offline outside a terminal, in CI, and with `USAP_NO_UPDATE_CHECK=1`; all state is one small file in the cache folder, removed by `--auto off`.
+- Add `docs/updates.md` (update contract v1), `PRIVACY.md`, short README Updates and Privacy sections, and offline update tests.
+
 ## [1.7.0] - 2026-11-25
 
 All 1.7.0 capabilities below are documented as portable protocol guidance and optional target-host contracts in the UltraTerm mapping; installing the portable skill does not implement host runtime controls, and these 1.7.0 target contracts were not part of the 2026-10-24 host inspection.
@@ -79,6 +85,7 @@ Wording and consistency fixes; no new protocol sections.
 - First public release: routing pass, adaptive concurrency, capability
   routing, dispatch contract, integration gate and efficiency scorecard.
 
+[1.8.0]: https://github.com/michael-berardi/ultraterm-subagent-protocol/compare/v1.7.0...v1.8.0
 [1.7.0]: https://github.com/michael-berardi/ultraterm-subagent-protocol/compare/v1.6.0...v1.7.0
 [1.6.0]: https://github.com/michael-berardi/ultraterm-subagent-protocol/compare/v1.5.2...v1.6.0
 [1.5.2]: https://github.com/michael-berardi/ultraterm-subagent-protocol/compare/v1.5.1...v1.5.2

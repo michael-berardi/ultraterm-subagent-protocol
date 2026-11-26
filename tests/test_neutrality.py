@@ -21,6 +21,9 @@ SHIPPED_FILES = [
     "CHANGELOG.md",
     "references/omp.md",
     "references/ultraterm.md",
+    "PRIVACY.md",
+    "docs/updates.md",
+    "update.py",
 ]
 
 # Concrete model ids that only an operator should choose. Provider-adapter code

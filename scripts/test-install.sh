@@ -3,7 +3,7 @@
 # Every install goes into a temporary HOME under $USAP_TEST_TMP (default: $TMPDIR or /tmp), never the real home folder.
 # The release is served from a local folder through file://, so no network is needed.
 # Usage: scripts/test-install.sh [release-dir]      (default dist/release)
-# Covered: fresh install and health check, re-install upgrades, corrupted archive refused, missing prerequisite named,
+# Covered: fresh install and health check, re-install upgrades, update.py upgrade and rollback pruning, corrupted archive refused, missing prerequisite named,
 # git checkouts never swapped (local changes, unpushed commit, stash, diverged, no upstream; clean ones fast-forwarded), symlink refused, unreachable release reported.
 set -eu
 cd "$(dirname "$0")/.."
@@ -31,7 +31,8 @@ tar -xzf "$DIST/usap.tar.gz" -C "$WORK/expect" || fail "release archive does not
 VERSION=$(sed -n 's/^  version:[[:space:]]*\([0-9][0-9A-Za-z.+-]*\)[[:space:]]*$/\1/p' "$WORK/expect/SKILL.md" | head -n 1)
 [ -n "$VERSION" ] || fail "release SKILL.md declares no version"
 if tar -tzf "$DIST/usap.tar.gz" | grep -Eq '^(\./)?(tests|scripts)/'; then fail "release archive contains tests or scripts"; fi
-pass "release archive unpacks, declares version $VERSION, and omits tests and scripts"
+[ -f "$WORK/expect/update.py" ] || fail "release archive is missing update.py"
+pass "release archive unpacks, declares version $VERSION, ships update.py, and omits tests and scripts"
 
 # run_install <home> [VAR=value ...]: runs the shipped installer with a clean environment; output goes to $WORK/last.log.
 run_install() {
@@ -63,6 +64,24 @@ grep -q "Upgraded USAP from 0.0.1 to $VERSION\." "$WORK/last.log" || { cat "$WOR
 cmp -s "$T1/SKILL.md" "$WORK/expect/SKILL.md" || fail "re-install did not restore the release SKILL.md"
 [ "$(ls -A "$(skills_of "$H1")")" = "$NAME" ] || fail "re-install left extra entries in the skills folder"
 pass "re-install upgrades 0.0.1 to $VERSION in place"
+
+# 2b. The shipped update.py upgrades the same copy from the release assets, keeps one rollback copy, and prunes it on its next run.
+if command -v python3 >/dev/null 2>&1; then
+  cat "$WORK/old-SKILL.md" > "$T1/SKILL.md"
+  printf '{"tag_name": "v%s", "draft": false, "prerelease": false, "body": "notes"}\n' "$VERSION" > "$WORK/latest.json"
+  helper() { env -i PATH="$PATH" TMPDIR="$WORK" HOME="$H1" XDG_CACHE_HOME="$WORK/cache" \
+    USAP_UPDATE_API="file://$WORK/latest.json" USAP_RELEASE_BASE="$BASE" python3 "$T1/update.py" "$@" >"$WORK/last.log" 2>&1; }
+  helper || { cat "$WORK/last.log" >&2; fail "update.py exited non-zero"; }
+  grep -q "Updated USAP from 0.0.1 to $VERSION\." "$WORK/last.log" || { cat "$WORK/last.log" >&2; fail "update.py did not report the upgrade"; }
+  cmp -s "$T1/SKILL.md" "$WORK/expect/SKILL.md" || fail "update.py did not install the release SKILL.md"
+  [ -d "$(skills_of "$H1")/.$NAME.previous" ] || fail "update.py kept no rollback copy"
+  [ -z "$(find "$WORK" -maxdepth 1 -name 'usap-update.*')" ] || fail "update.py left its download folder"
+  helper --check || { cat "$WORK/last.log" >&2; fail "update.py --check did not exit 0 after the update"; }
+  [ "$(ls -A "$(skills_of "$H1")")" = "$NAME" ] || fail "update.py did not prune its rollback copy on the next run"
+  pass "update.py upgrades 0.0.1 to $VERSION from the release assets and prunes its rollback copy on the next run"
+else
+  pass "skip - update.py checks: python3 is not installed"
+fi
 
 # 3. A corrupted archive is refused before anything is installed; the existing copy is untouched.
 BAD="$WORK/bad"; mkdir "$BAD"

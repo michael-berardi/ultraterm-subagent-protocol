@@ -72,6 +72,9 @@ class SkillContractTests(unittest.TestCase):
             "references/omp.md",
             "references/ultraterm.md",
             "CHANGELOG.md",
+            "docs/updates.md",
+            "PRIVACY.md",
+            "update.py",
         ):
             self.assertTrue((ROOT / path).is_file(), path)
         readme = (ROOT / "README.md").read_text()
@@ -171,7 +174,7 @@ class RecoveryContractTests(unittest.TestCase):
 
     def test_release_version_and_pinned_install_agree(self) -> None:
         version = re.search(r"(?m)^  version: (\d+\.\d+\.\d+)$", SKILL).group(1)
-        self.assertEqual(version, "1.7.0")
+        self.assertEqual(version, "1.8.0")
         self.assertIn(f"USAP_VERSION={version}", self.readme)
         self.assertIn(f"--branch v{version}", self.readme)
         self.assertRegex(self.changelog, rf"(?m)^## \[{re.escape(version)}\] - \d{{4}}-\d{{2}}-\d{{2}}$")
@@ -180,6 +183,21 @@ class RecoveryContractTests(unittest.TestCase):
         self.assertNotIn("Unreleased", self.readme + SKILL + self.mapping)
         for previous in ("[1.6.0]", "[1.0.1]", "[1.0.0]"):
             self.assertIn(previous, self.changelog)
+
+    def test_update_docs_marker_and_short_privacy_section(self) -> None:
+        updates = (ROOT / "docs" / "updates.md").read_text()
+        self.assertTrue(updates.startswith("<!-- update-contract: v1 -->\n"))
+        for flag in ("--check", "--notice", "--skip", "--rollback", "--auto on|off|status", "--notify on|off|status"):
+            self.assertIn(flag, updates)
+        self.assertIn("(docs/updates.md)", self.readme)
+        privacy = self.readme.split("\n## Privacy\n", 1)[1].split("\n## ", 1)[0].strip().splitlines()
+        self.assertTrue(3 <= len(privacy) <= 6, privacy)
+        self.assertIn("(PRIVACY.md)", privacy[-1])
+
+    def test_skill_text_never_runs_the_update_helper(self) -> None:
+        # Agents load SKILL.md on every task; update checks belong to the user or a host hook.
+        for name, text in (("SKILL.md", SKILL), ("references/omp.md", OMP), ("references/ultraterm.md", ULTRATERM)):
+            self.assertNotIn("update.py", text, name)
 
     def test_installers_never_swap_a_git_checkout_or_a_link(self) -> None:
         sh = (ROOT / "scripts/install.sh").read_text()
