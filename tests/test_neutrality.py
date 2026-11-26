@@ -27,9 +27,13 @@ SHIPPED_FILES = [
 # may name its own provider catalog, but no adapter files exist in this
 # documentation-only repository.
 MODEL_CHOICE = re.compile(
-    r"gpt-[56][a-z0-9.-]*|deepseek[a-z0-9.-]*|opencode-go/|openrouter/|:exacto"
-    r"|mimo-v[0-9][a-z0-9.-]*|glm-[0-9][a-z0-9.-]*|claude-[a-z0-9.-]*-5-5"
-    r"|(haiku|sonnet|opus)[ -]?5[.-]5",
+    r"gpt-(?:3\.5|oss|[456])[a-z0-9.-]*|\bo[134](?:-mini|-preview)?\b|deepseek[a-z0-9.-]*"
+    r"|opencode-go/|openrouter/|:exacto|mimo-v[0-9][a-z0-9.-]*"
+    r"|glm-[0-9][a-z0-9.-]*|gemini[ -][0-9][a-z0-9.-]*|kimi-k[0-9][a-z0-9.-]*"
+    r"|grok[ -][a-z0-9.-]*|llama[ -][0-9][a-z0-9.-]*|qwen[ -]?[0-9][a-z0-9.-]*"
+    r"|mistral[ -][a-z0-9.-]*|claude-(?:haiku|sonnet|opus)-[0-9][a-z0-9.-]*"
+    r"|claude-[a-z0-9.-]*-5-5|(haiku|sonnet|opus)[ -]?[0-9][.-][0-9]"
+    r"|antigravity",
     re.IGNORECASE,
 )
 
@@ -142,6 +146,35 @@ class NeutralityTests(unittest.TestCase):
             sample.write_text("ordinary text", encoding="utf-8")
             self.assertIsNone(pattern.search(sample.read_text(encoding="utf-8")))
             self.assertIsNone(pattern.search("xzzqx-private-term"))
+
+    def test_model_choice_regex_catches_model_ids_without_false_positives(self):
+        for bad in (
+            "gpt-3.5",
+            "gpt-oss",
+            "gpt-4o",
+            "gpt-4.1",
+            "gpt-5.2",
+            "o3",
+            "o4-mini",
+            "deepseek-r1",
+            "gemini-2.5-pro",
+            "Gemini 2.5",
+            "kimi-k2.7",
+            "grok-3",
+            "llama-3.3",
+            "qwen2.5",
+            "mistral-large",
+            "claude-opus-5-5",
+            "Sonnet 5.5",
+            "antigravity",
+        ):
+            self.assertIsNotNone(MODEL_CHOICE.search(bad), bad)
+        for ok in (
+            "Read-only Claude reviewers receive no Bash",
+            "Native Pi compaction follows host settings",
+            "implicit route-chain runs",
+        ):
+            self.assertIsNone(MODEL_CHOICE.search(ok), ok)
 
 
 if __name__ == "__main__":

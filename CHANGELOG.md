@@ -4,6 +4,16 @@ All notable changes to the UltraTerm Subagent Protocol are documented here.
 The canonical version is `metadata.version` in [`SKILL.md`](SKILL.md) and
 follows [Semantic Versioning](https://semver.org/).
 
+## [1.7.0] - 2026-11-25
+
+All 1.7.0 capabilities below are documented as portable protocol guidance and optional target-host contracts in the UltraTerm mapping; installing the portable skill does not implement host runtime controls, and these 1.7.0 target contracts were not part of the 2026-10-24 host inspection.
+
+- Add host-supported bounded intra-batch DAG handoffs (`dependsOn` in the UltraTerm mapping) so acyclic `author -> verifier` pipelines run inside one dispatch with auto-forwarded predecessor pointers, a run budget covering the full chain, clean abort on failed dependencies, no unbounded peer ping-pong loops, and primary ownership of final judgment.
+- Add host-supported zero-copy `#seq` / `seqs` board citations: cite indexed run-log entries when the recipient harness can read the board (falling back to a file path or short summary otherwise), mapped to non-destructive `ultraterm_relay` (`operation: "read"`) and `ultraterm_hub` (`inbox` `seqs`) reads.
+- Add host-supported automatic isolated git worktrees for multi-writer batches (`workspace: "auto" | "worktree" | "shared"` in the UltraTerm mapping): runs declaring two or more `mayEdit: true` tasks in a git repository isolate automatically outside the repository tree from the run's base `HEAD` while single-writer and read-only leaves stay shared; disjoint `ownedPaths` still apply, read-only dependents inspect isolated predecessors only when the host grants `worktreePath` read-only or stages a diff summary under `cwd` (`baseCommit..branch` requires shell access), dirty or partial worktrees are retained for inspection/resume while startup orphan cleanup follows the same clean-only rule for unreferenced worktrees, the primary reviews and merges returned branch receipts in the integration gate, and the host never auto-pushes (noting `allowBash` remains unsandboxed).
+- Add host-supported warm context-preserving transcript forking (`forkFrom` copying only the persisted session transcript within the same parent session, never scratch, build, or worktree directories), bounded automatic mid-run in-place failover on implicit chains for transient provider failures (keeping original time/turn budgets and leaf capability tiers, reporting policy/content-filter refusals as failures rather than routing around them, and keeping explicit routes strictly fail-closed), optional explicit replacement routes on hub `resume` for quota/upstream-stalled checkpoints (preserving capability tier and `requireImages` requirements), idle-stream watchdogs paused during active tool calls, and deterministic runtime stall diagnostics (`stalledTasks`, `unansweredRequests`, `awaitingDependencies`) with zero extra LLM narrator or monitor agents.
+- Expand documentation contract and neutrality tests to cover all 1.7.0 protocol invariants, host-support qualifiers, verification-scope caveats, and UltraTerm mappings.
+
 ## [1.6.0] - 2026-11-15
 
 - Batch width is adaptive. The fixed ceiling of 8 agents is gone: a batch is as wide as the work has independent leaves, bounded by host capacity (the host's own limits, provider rate limits, and the machine). The skill now says to let the host queue what it cannot start, and to send fewer at a time when a provider starts refusing requests.
@@ -69,6 +79,7 @@ Wording and consistency fixes; no new protocol sections.
 - First public release: routing pass, adaptive concurrency, capability
   routing, dispatch contract, integration gate and efficiency scorecard.
 
+[1.7.0]: https://github.com/michael-berardi/ultraterm-subagent-protocol/compare/v1.6.0...v1.7.0
 [1.6.0]: https://github.com/michael-berardi/ultraterm-subagent-protocol/compare/v1.5.2...v1.6.0
 [1.5.2]: https://github.com/michael-berardi/ultraterm-subagent-protocol/compare/v1.5.1...v1.5.2
 [1.5.1]: https://github.com/michael-berardi/ultraterm-subagent-protocol/compare/v1.5.0...v1.5.1

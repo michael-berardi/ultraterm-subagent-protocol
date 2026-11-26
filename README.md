@@ -9,10 +9,10 @@ The skill is text, not runtime enforcement. It needs no credentials or network a
 ## Protocol
 
 1. **Routing pass** — decide whether delegation shortens the time to a correct result before dispatching anything. Simple, coupled, or judgment-heavy work stays with the primary.
-2. **Adaptive concurrency** — one agent per genuinely independent leaf, from zero to as many as the host can carry; never parallelize a dependency chain.
-3. **Capability routing** — send each leaf to the cheapest model tier that can finish it reliably; escalate on ambiguity, blast radius, or failed attempts.
-4. **Dispatch contract** — brief every leaf with target, change, acceptance, ownership, and scope limits; pass context through files, not history dumps.
-5. **Integration gate** — the primary inspects every report and changed surface, runs focused checks, and validates once after integration. A subagent's "done" is evidence to inspect, not completion proof.
+2. **Adaptive concurrency** — one agent per genuinely independent leaf, from zero to as many as the host can carry; parallelize DAG siblings and, where the host supports intra-batch dependencies, use bounded handoffs (`author -> verifier`) instead of unnecessary parent round-trips.
+3. **Capability routing** — send each leaf to the cheapest model tier that can finish it reliably; escalate on ambiguity, blast radius, or failed attempts, and on host-managed implicit chains allow bounded in-place failover for transient provider errors while keeping explicit routes fail-closed and reporting policy refusals.
+4. **Dispatch contract** — brief every leaf with target, change, acceptance, ownership, and scope limits; pass context through files or—when supported by the host and recipient—indexed `#seq` board citations, and where supported isolate multi-writer git batches in per-task worktrees (host never auto-pushes) or warm-fork persisted transcripts without duplicating scratch, build, or worktree directories.
+5. **Integration gate** — the primary inspects every report and changed surface, reviews and merges any isolated worktree branch receipts, runs focused checks, relies on deterministic host stall diagnostics rather than extra LLM monitor/narrator agents, and validates once after integration. A subagent's "done" is evidence to inspect, not completion proof.
 
 The primary agent always owns interpretation, decomposition, cross-task contracts, consequential judgment, integration, verification, and the final answer. Subagents are bounded execution capacity, never replacement orchestrators.
 
@@ -32,14 +32,14 @@ Windows, in Windows PowerShell 5.1 or PowerShell 7:
 irm https://github.com/michael-berardi/ultraterm-subagent-protocol/releases/latest/download/install.ps1 | iex
 ```
 
-The skill goes to `~/.config/agents/skills/ultraterm-subagent-protocol` (on Windows, `%USERPROFILE%\.config\agents\skills\ultraterm-subagent-protocol`). The installer needs no runtime, Node, Python, or sudo, and it does not edit your shell profile or PATH. To update, run the same line again; it upgrades in place. To pin a version, put `USAP_VERSION=1.6.0` before `sh` (macOS and Linux) or set `$env:USAP_VERSION` first (Windows). To remove USAP, delete that folder. A git clone in that folder is never replaced: a clean one is updated in place with `git pull --ff-only`, and one with local changes or that cannot fast-forward is left untouched with a message. A symbolic link there is also left alone. Existing copies containing nested links or `.git` entries are refused. Pinned installs refuse git checkouts; use `git fetch --tags` and `git checkout v1.5.2` yourself instead.
+The skill goes to `~/.config/agents/skills/ultraterm-subagent-protocol` (on Windows, `%USERPROFILE%\.config\agents\skills\ultraterm-subagent-protocol`). The installer needs no runtime, Node, Python, or sudo, and it does not edit your shell profile or PATH. To update, run the same line again; it upgrades in place. To pin a version, put `USAP_VERSION=1.7.0` before `sh` (macOS and Linux) or set `$env:USAP_VERSION` first (Windows). To remove USAP, delete that folder. A git clone in that folder is never replaced: a clean one is updated in place with `git pull --ff-only`, and one with local changes or that cannot fast-forward is left untouched with a message. A symbolic link there is also left alone. Existing copies containing nested links or `.git` entries are refused. Pinned installs refuse git checkouts; use `git fetch --tags` and `git checkout v1.7.0` yourself instead.
 
 Installer variables: `USAP_SKILLS_DIR` selects the skills folder (default `~/.config/agents/skills`); it does not move an existing installation. Installer assets start at v1.5.0; use the manual clone route for older releases.
 
 Manual route: clone a release into a skill directory recognized by your agent runtime:
 
 ```sh
-git clone --branch v1.6.0 https://github.com/michael-berardi/ultraterm-subagent-protocol.git \
+git clone --branch v1.7.0 https://github.com/michael-berardi/ultraterm-subagent-protocol.git \
   ~/.config/agents/skills/ultraterm-subagent-protocol
 ```
 
@@ -82,9 +82,9 @@ Leaf B runs alongside Leaf A because the Contract pins the interface it consumes
 
 USAP is a skill contract, not a service. The source checkout contains (release archives omit `tests/` and `scripts/`):
 
-- [`SKILL.md`](SKILL.md) — the protocol: routing pass, adaptive batch width, capability routing table, dispatch contract, coordination rules, integration gate, and efficiency scorecard.
+- [`SKILL.md`](SKILL.md) — the protocol: routing pass, adaptive batch width, capability routing table, dispatch contract, coordination and isolation rules (host-supported bounded DAG handoffs, `#seq` board references with fallback, multi-writer git worktrees), bounded execution and recovery (bounded implicit in-place failover, warm transcript forking, deterministic stall diagnostics), integration gate, and efficiency scorecard.
 - [`references/omp.md`](references/omp.md) — an optional mapping of the protocol onto OMP's `task` and `hub` tools.
-- [`references/ultraterm.md`](references/ultraterm.md) — optional host-specific budgets, permissions, checkpoints, explicit resume, diagnostics, and completion delivery.
+- [`references/ultraterm.md`](references/ultraterm.md) — optional host-specific budgets, `dependsOn` intra-run handoffs, non-destructive `#seq` / `seqs` board reads, automatic `workspace` git worktrees, warm `forkFrom` transcripts, bounded implicit mid-run failover, explicit resume replacement routes, idle-stream watchdogs, permissions, checkpoints, explicit resume, deterministic stall diagnostics, and completion delivery.
 - `tests/test_skill.py` — deterministic checks of the public contract: portable frontmatter, core invariants, context-efficiency and disclosure limits, required files, cross-file rule consistency, and README freshness.
 - `scripts/install.sh` and `scripts/install.ps1` — the one-line installers. They download and verify archives, replace plain skill copies, or fast-forward existing git checkouts; they do not run the skill.
 
@@ -94,7 +94,7 @@ This describes the written process, not a guarantee that a host or model follows
 
 ## Security and safety
 
-The installed skill needs no credentials, network access, or executable dependencies. The installers require network access for public releases and refuse archives whose SHA-256 does not match `SHA256SUMS`. Checksums detect corruption, not a compromised release publisher. The one-line commands execute the downloaded installer without independently verifying it; download and inspect it first if required by your trust policy. Its safety posture lives in the protocol itself: one writer per shared file, weak or free models never own consequential decisions unverified, and retrieved content plus subagent output are treated as untrusted evidence until the primary verifies them. See [SECURITY.md](SECURITY.md) for the reporting policy.
+The installed skill needs no credentials, network access, or executable dependencies. The installers require network access for public releases and refuse archives whose SHA-256 does not match `SHA256SUMS`. Checksums detect corruption, not a compromised release publisher. The one-line commands execute the downloaded installer without independently verifying it; download and inspect it first if required by your trust policy. Its safety posture lives in the protocol itself: one writer per shared file (with host-supported per-task git worktrees isolating multi-writer batches without host auto-push, while remaining a workflow boundary rather than an OS sandbox), weak or free models never own consequential decisions unverified, and retrieved content plus subagent output are treated as untrusted evidence until the primary verifies them. See [SECURITY.md](SECURITY.md) for the reporting policy.
 
 ## Validate
 
@@ -118,7 +118,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Versioning and releases
 
-The canonical version is `metadata.version` in [`SKILL.md`](SKILL.md) (currently 1.6.0), following semantic versioning: breaking contract changes bump the major version, new protocol sections the minor version, and wording fixes the patch version. Each release is tagged `vX.Y.Z` with notes on the [releases page](https://github.com/michael-berardi/ultraterm-subagent-protocol/releases) and in [CHANGELOG.md](CHANGELOG.md); behavioral changes ship with their README and test updates in the same commit.
+The canonical version is `metadata.version` in [`SKILL.md`](SKILL.md) (currently 1.7.0), following semantic versioning: breaking contract changes bump the major version, new protocol sections the minor version, and wording fixes the patch version. Each release is tagged `vX.Y.Z` with notes on the [releases page](https://github.com/michael-berardi/ultraterm-subagent-protocol/releases) and in [CHANGELOG.md](CHANGELOG.md); behavioral changes ship with their README and test updates in the same commit.
 
 ## License
 

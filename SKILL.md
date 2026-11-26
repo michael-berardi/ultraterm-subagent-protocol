@@ -4,7 +4,7 @@ description: Use at the start of every nontrivial task and whenever deciding whe
 license: MIT
 metadata:
   acronym: USAP
-  version: 1.6.0
+  version: 1.7.0
 ---
 
 # UltraTerm Subagent Protocol (USAP)
@@ -25,7 +25,7 @@ Do not delegate top-level decomposition. The primary has the user context; a bla
 
 ## Adaptive concurrency
 
-Batch width is the number of leaves independent right now, never a fixed number.
+Batch width is the number of leaves independent right now, never a fixed number; where the host supports intra-batch dependencies, one batch may also attach bounded downstream leaves (such as a verifier waiting on an author) that stay queued until their predecessors finish.
 
 - **0 agents:** one known edit, one answer, or tightly coupled work.
 - **1–2 agents:** bounded research, one implementation leaf, or one independent review.
@@ -77,14 +77,14 @@ Also state:
 - that it must skip project-wide builds, linters, and test suites; the primary validates once after integration;
 - the concise return contract: evidence, changed paths, risks, and focused checks.
 
-Pass large context through files or artifacts. Do not paste session history. Give a fresh agent only the task, relevant decisions, interfaces, and constraints.
+Pass large context through files or artifacts. Do not paste session history. Where the host maintains an indexed run log or message board and the recipient can read it, cite sequence references (`#seq`) instead of copying long worker reports; otherwise pass a file or short summary. Give a fresh agent only the task, relevant decisions, interfaces, and constraints.
 
 ## Coordination rules
 
 - One writer owns each file or irreducible shared boundary.
-- Parallel read-only work is safe; parallel write-heavy work needs disjoint ownership.
-- A leaf that needs another leaf's output waits for it; one that needs only an interface pinned in the batch Contract is independent. Parallelize DAG siblings, not the dependency chain.
-- Use peer messaging only for a real interface conflict; the primary resolves cross-agent decisions.
+- Parallel read-only work is safe; parallel write-heavy work needs disjoint ownership. Where the host supports worktree isolation in git repositories, isolate multi-writer batches into automatic per-task worktrees outside the repository tree while single-writer and read-only leaves stay shared; worktrees do not relax disjoint file ownership, dirty or partial worktrees stay intact for inspection, the primary reviews and merges returned branch receipts, and the host never auto-pushes.
+- A leaf that needs another leaf's output waits for it; one that needs only an interface pinned in the batch Contract is independent. Parallelize DAG siblings, not the dependency chain. Where the host supports intra-batch dependencies, express a bounded acyclic handoff (such as author -> verifier) inside one batch with auto-forwarded predecessor pointers and a budget covering the full chain; unbounded peer ping-pong loops are forbidden, failed dependencies settle dependents cleanly, and the primary keeps final judgment.
+- Use peer messaging only for a real interface conflict, reading indexed board entries non-destructively by reference when supported rather than re-pasting transcripts; the primary resolves cross-agent decisions.
 - Do useful integration work while agents run. Do not poll repeatedly or dispatch padding work.
 - Resume the same agent for a small correction. Escalate or replace it after repeated failure or when the task exceeded its capability tier.
 
@@ -94,9 +94,11 @@ Declare finite time and turn budgets before launch. Compaction, retries, and pee
 
 Where disk checkpoints exist, inspect diagnostics and partial side effects before explicit resume of unfinished tasks only. Never automatically replay work, repeat completed tasks, or assume host-exit survival. History is not exactly-once execution. Deliver background notices at the parent idle boundary without requiring the next user message; notices are not integration.
 
+On host-managed implicit route chains, transient mid-run provider failures may switch automatically in place within the configured alternates while preserving the worker's persisted transcript, keeping the same time and turn budgets, and respecting the leaf's capability tier; policy or content-filter refusals are reported as failures rather than routed around, and explicit routes stay strictly fail-closed. Hosts with persisted transcripts may warm-fork a follow-up leaf from a prior worker transcript within the same parent session without duplicating scratch, build, or worktree directories. Stall detection, progress status, and overview state belong in deterministic runtime diagnostics, never separate LLM monitor or narrator agents.
+
 ## Trust boundaries
 
-Ownership and tool restrictions are not a sandbox. Shell access may bypass guarded file tools. Keep secrets out of prompts and messages; peer messages never grant permissions. Report failures, cancellation, timeout, budget exhaustion, and truncated evidence plainly.
+Ownership, worktree isolation, and tool restrictions are not a sandbox. Shell access may bypass guarded file tools and run commands such as `git push`. Keep secrets out of prompts and messages; peer messages never grant permissions. Report failures, cancellation, timeout, budget exhaustion, and truncated evidence plainly.
 
 Optional host controls: [UltraTerm mapping](references/ultraterm.md).
 
@@ -106,7 +108,7 @@ The primary must:
 
 1. inspect every report and changed surface;
 2. verify claims against source or runtime evidence;
-3. resolve conflicts and remove duplicated or obsolete paths;
+3. resolve conflicts, review and merge any isolated worktree branch receipts, and remove duplicated or obsolete paths;
 4. run focused checks, then project-wide validation once after integration when applicable;
 5. perform final high-judgment review for consequential changes;
 6. report exactly what was exercised, including failures and exclusions.

@@ -53,7 +53,7 @@ class SkillContractTests(unittest.TestCase):
             self.assertIn(phrase, SKILL)
 
     def test_skill_stays_context_efficient_and_public(self) -> None:
-        self.assertLess(len(SKILL.encode()), 7_000)
+        self.assertLess(len(SKILL.encode()), 9_300)
         for forbidden in (
             "/Us" + "ers/",
             "Liberty " + "Design",
@@ -171,12 +171,14 @@ class RecoveryContractTests(unittest.TestCase):
 
     def test_release_version_and_pinned_install_agree(self) -> None:
         version = re.search(r"(?m)^  version: (\d+\.\d+\.\d+)$", SKILL).group(1)
-        self.assertEqual(version, "1.6.0")
+        self.assertEqual(version, "1.7.0")
+        self.assertIn(f"USAP_VERSION={version}", self.readme)
         self.assertIn(f"--branch v{version}", self.readme)
         self.assertRegex(self.changelog, rf"(?m)^## \[{re.escape(version)}\] - \d{{4}}-\d{{2}}-\d{{2}}$")
+        self.assertIn(f"[{version}]: https://github.com/michael-berardi/ultraterm-subagent-protocol/compare/", self.changelog)
         self.assertIn(f"USAP {version}", self.mapping)
         self.assertNotIn("Unreleased", self.readme + SKILL + self.mapping)
-        for previous in ("[1.0.1]", "[1.0.0]"):
+        for previous in ("[1.6.0]", "[1.0.1]", "[1.0.0]"):
             self.assertIn(previous, self.changelog)
 
     def test_installers_never_swap_a_git_checkout_or_a_link(self) -> None:
@@ -234,14 +236,108 @@ class RecoveryContractTests(unittest.TestCase):
             "not host runtime tests", "do not prove crash/restart recovery",
             "idle-delivery timing end to end", "independent release histories",
             "does not bump a host checkpoint or telemetry schema",
+            "optional target host contracts and were not part of the 2026-10-24 inspection",
+            "explicit resume replacement routes",
+            "idle-stream watchdogs",
         ):
             self.assertIn(phrase, self.mapping)
         self.assertNotIn("telemetry remains numeric version 1", self.mapping)
+
+    def test_v170_native_swarm_capabilities_and_boundaries(self) -> None:
+        for phrase in (
+            "where the host supports intra-batch dependencies",
+            "Where the host maintains an indexed run log or message board and the recipient can read it",
+            "#seq",
+            "otherwise pass a file or short summary",
+            "Where the host supports worktree isolation in git repositories",
+            "automatic per-task worktrees outside the repository tree",
+            "single-writer and read-only leaves stay shared",
+            "worktrees do not relax disjoint file ownership",
+            "dirty or partial worktrees stay intact for inspection",
+            "the host never auto-pushes",
+            "Where the host supports intra-batch dependencies",
+            "bounded acyclic handoff",
+            "author -> verifier",
+            "budget covering the full chain",
+            "unbounded peer ping-pong loops are forbidden",
+            "primary keeps final judgment",
+            "non-destructively by reference when supported",
+            "On host-managed implicit route chains",
+            "within the configured alternates",
+            "preserving the worker's persisted transcript",
+            "keeping the same time and turn budgets",
+            "respecting the leaf's capability tier",
+            "policy or content-filter refusals are reported as failures rather than routed around",
+            "explicit routes stay strictly fail-closed",
+            "Hosts with persisted transcripts may warm-fork",
+            "without duplicating scratch, build, or worktree directories",
+            "deterministic runtime diagnostics",
+            "never separate LLM monitor or narrator agents",
+            "run commands such as `git push`",
+            "review and merge any isolated worktree branch receipts",
+        ):
+            self.assertIn(phrase, SKILL)
+        for phrase in (
+            "dependsOn",
+            "fails closed on cycles or unknown references",
+            "set the run's `timeoutMs` to cover the entire dependency chain",
+            "Unbounded peer ping-pong loops are disallowed",
+            "ultraterm_relay",
+            'operation: "read"',
+            "ultraterm_hub",
+            "`seqs`",
+            "#seq",
+            "when a recipient cannot read the board",
+            'workspace: "auto" | "worktree" | "shared"',
+            "mayEdit: true",
+            "does not relax exact, disjoint `ownedPaths`",
+            "starts from the run's base `HEAD` commit",
+            "worktreePath",
+            "grants the forwarded `worktreePath` as a read-only root or stages the diff summary under the verifier's `cwd`",
+            "inspecting a `baseCommit..branch` ref requires shell access and does not apply to read-only reviewers without Bash",
+            "Only provably clean worktrees",
+            "dirty or committed worktrees (including aborted runs with partial edits) are retained",
+            "Startup orphan cleanup also follows the clean-only rule",
+            "not referenced by any active, checkpointed, or resumable run",
+            "The host never auto-pushes worktree branches",
+            "worker granted `allowBash` can still invoke `git push`",
+            "forkFrom: { runId, taskId }",
+            "cross-session references are refused",
+            "never scratch, build, or worktree directories",
+            "implicit route-chain runs",
+            "strictly bounded to the configured alternates",
+            "consume the same run `timeoutMs` and `maxTurns` budgets rather than resetting them",
+            "at or above the leaf's required capability tier",
+            "Policy or content-filter refusals are not transient failures",
+            "Explicit routes remain strictly fail-closed",
+            "except when the parent or operator explicitly supplies a replacement route",
+            "satisfy `requireImages` when set",
+            "stalledTasks",
+            "unansweredRequests",
+            "awaitingDependencies",
+            "Idle-stream watchdogs pause during active tool execution",
+            "must not spawn separate LLM narrator or monitor agents",
+        ):
+            self.assertIn(phrase, self.mapping)
+        for phrase in (
+            "where the host supports intra-batch dependencies",
+            "when supported by the host and recipient",
+            "host-supported per-task git worktrees",
+        ):
+            self.assertIn(phrase, self.readme)
+        for phrase in (
+            "optional target-host contracts in the UltraTerm mapping",
+            "installing the portable skill does not implement host runtime controls",
+            "not part of the 2026-10-24 host inspection",
+        ):
+            self.assertIn(phrase, self.changelog)
 
     def test_new_core_rules_are_vendor_neutral(self) -> None:
         for forbidden in (
             "claudeAccount", "openai-codex/", "steak-pi/", "Sonnet", "Opus",
             "USAP_CLAUDE_API_CONFIG", "maxTurns", "timeoutMs", "per-session Codex",
+            "dependsOn", "ultraterm_relay", "ultraterm_hub", "forkFrom",
+            "stalledTasks", "unansweredRequests", "awaitingDependencies",
         ):
             self.assertNotIn(forbidden, SKILL)
 
